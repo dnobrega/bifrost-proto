@@ -1,0 +1,19 @@
+{
+  "abundance": "Asplund 2021 coronal",
+  "canonical_table_axes": [
+    "log10_ne_cm-3",
+    "log10_T_K"
+  ],
+  "channel": "94",
+  "conversion": "Legacy IDL table used directly; axes are log10(ne/cm^-3) and log10(T/K).",
+  "fill_value": 0.0,
+  "format_version": 1,
+  "instrument": "SDO/AIA",
+  "ionization_equilibrium": "legacy table; see original source",
+  "local_output_units": "DN cm^-1 s^-1 pix^-1",
+  "name": "aia94",
+  "response_definition": "G such that local synthetic signal = ne * nH * G",
+  "response_units": "DN cm^5 s^-1 pix^-1",
+  "source_file": "aia_94_response_ne_tg.sav",
+  "source_sha256": "b55ca022c723b84d02b1248c286c1975a8361d1b647f9451aaf2657868725b5c"
+}

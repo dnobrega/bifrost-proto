@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If Bifrost Proto is used in published scientific work, please cite this software using these metadata and the GitHub release."
+title: "Bifrost Proto: Analysis and visualization tools for Bifrost simulations"
+type: software
+authors:
+  - family-names: "Nóbrega Siverio"
+    given-names: "Daniel"
+version: "0.1.47"
+date-released: 2026-11-05
+license: "BSD-3-Clause"
+keywords:
+  - "Bifrost"
+  - "radiative magnetohydrodynamics"
+  - "solar physics"
+  - "scientific Python"
+abstract: "A Python package for reading, analyzing and visualizing Bifrost radiative-MHD simulation data."

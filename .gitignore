@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.ipynb_checkpoints/
+.DS_Store
+
+# Simulation outputs (avoid publishing local large model data)
+*.snap
+*.aux
+*.scr
+*.idl
+*.npy
+*.mp4
+*.png
+!bifrost_proto/resources/instrument_responses/**/*.npy

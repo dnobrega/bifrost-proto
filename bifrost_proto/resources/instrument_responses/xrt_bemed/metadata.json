@@ -1,0 +1,19 @@
+{
+  "abundance": "Asplund 2021 coronal",
+  "canonical_table_axes": [
+    "log10_ne_cm-3",
+    "log10_T_K"
+  ],
+  "conversion": "Legacy IDL table used directly; axes are log10(ne/cm^-3) and log10(T/K).",
+  "fill_value": 0.0,
+  "filter": "bemed",
+  "format_version": 1,
+  "instrument": "Hinode/XRT",
+  "ionization_equilibrium": "legacy table; see original source",
+  "local_output_units": "DN cm^-1 s^-1 pix^-1",
+  "name": "xrt_bemed",
+  "response_definition": "G such that local synthetic signal = ne * nH * G",
+  "response_units": "DN cm^5 s^-1 pix^-1",
+  "source_file": "xrt_be-med_response_ne_tg.sav",
+  "source_sha256": "08c9511a4fdcc77a91daace87182d583c1dea1cc5e63848d4f5983084f325b20"
+}

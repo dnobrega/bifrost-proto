@@ -1,0 +1,22 @@
+{
+  "abundance": "sun_coronal_1992_feldman_ext.abund",
+  "canonical_table_axes": [
+    "log10_ne_cm-3",
+    "log10_T_K"
+  ],
+  "channel": "174",
+  "conversion": "Reproduces the legacy IDL normalization: FITS DN m^-1 s^-1 pix^-1 -> DN cm^-1 s^-1 pix^-1, then divide by ne^2 and proton_dens(T), so runtime multiplication by ne*nH yields the local synthetic signal.",
+  "detector": "HRI_EUV",
+  "fill_value": 1e-32,
+  "format_version": 1,
+  "instrument": "Solar Orbiter/EUI",
+  "ionization_equilibrium": "legacy FITS response; see original source",
+  "local_output_units": "DN cm^-1 s^-1 pix^-1",
+  "name": "eui174",
+  "nh_over_ne_file": "eui174_nhone.sav",
+  "nh_over_ne_sha256": "93dcbb9061232f181931e536dd87920f85d4fbe7f370ca854e1db372891ea789",
+  "response_definition": "G such that local synthetic signal = ne * nH * G",
+  "response_units": "DN cm^5 s^-1 pix^-1",
+  "source_file": "goft_hri_174_sun_coronal_1992_feldman_ext.abund_chianti.ioneq_synthetic.fits",
+  "source_sha256": "86e7261bf655e23364f50b3618bb1192d24d63dd6b2e7a354115d3ad296658bb"
+}

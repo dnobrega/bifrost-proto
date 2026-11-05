@@ -1,0 +1,10 @@
+{
+  "format_version": 1,
+  "responses": [
+    "aia94", "aia131", "aia171", "aia193", "aia211", "aia304", "aia335",
+    "xrt_almed", "xrt_almesh", "xrt_alpoly", "xrt_althick", "xrt_bemed",
+    "xrt_bethick", "xrt_bethin", "xrt_cpoly", "xrt_tipoly", "eui174"
+  ],
+  "canonical_table_axes": ["log10_ne_cm-3", "log10_T_K"],
+  "local_output_units": "DN cm^-1 s^-1 pix^-1"
+}

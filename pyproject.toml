@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bifrost-proto"
+dynamic = ["version"]
+description = "Bifrost radiative-MHD simulation analysis, visualization, and instrument responses"
+readme = "README.md"
+license = "BSD-3-Clause"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+authors = [{name = "Daniel Nóbrega Siverio"}]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Physics",
+]
+requires-python = ">=3.10"
+dependencies = ["numpy", "numba", "matplotlib"]
+
+[project.optional-dependencies]
+conversion = ["scipy", "astropy"]
+test = ["scipy", "pytest"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["bifrost_proto*"]
+
+[tool.setuptools.package-data]
+bifrost_proto = [
+  "resources/instrument_responses/*.json",
+  "resources/instrument_responses/*.md",
+  "resources/instrument_responses/*/*.npy",
+  "resources/instrument_responses/*/*.json",
+  "resources/colormaps/*.txt",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "bifrost_proto.version.__version__"}
