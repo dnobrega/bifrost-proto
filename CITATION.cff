@@ -6,6 +6,8 @@ authors:
   - family-names: "Nóbrega Siverio"
     given-names: "Daniel"
 version: "0.1.47"
+repository-code: "https://github.com/dnobrega/bifrost-proto"
+url: "https://github.com/dnobrega/bifrost-proto"
 date-released: 2026-11-05
 license: "BSD-3-Clause"
 keywords:
