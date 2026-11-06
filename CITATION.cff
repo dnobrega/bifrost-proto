@@ -3,7 +3,7 @@ message: "If Bifrost Proto is used in published scientific work, please cite thi
 title: "Bifrost Proto: Analysis and visualization tools for Bifrost simulations"
 type: software
 authors:
-  - family-names: "Nóbrega Siverio"
+  - family-names: "Nóbrega-Siverio"
     given-names: "Daniel"
 version: "0.1.47"
 repository-code: "https://github.com/dnobrega/bifrost-proto"
