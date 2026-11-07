@@ -4,6 +4,12 @@
 
 Bifrost Proto provides efficient access to native and derived variables, staggered-grid operations, physical unit conversions, synthetic solar observations, 2D plots, and MP4 animations.
 
+## License and citation
+
+Bifrost Proto is released under the **[BSD 3-Clause License](LICENSE)**.
+
+If you use Bifrost Proto in scientific research, please cite the repository. Citation information is available in [`CITATION.cff`](CITATION.cff). Third-party attribution and licensing details are in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+
 ## Installation
 
 Install directly from GitHub:
@@ -116,8 +122,12 @@ For spatial scans, `scan="x"` moves through successive YZ planes at a fixed snap
 
 See [`docs/`](docs/) for further details on variables, staggered grids, diagnostics, EOS, and file formats, and [`CHANGELOG.md`](CHANGELOG.md) for changes between versions.
 
-## License and citation
+## Acknowledgements
 
-Bifrost Proto is released under the **[BSD 3-Clause License](LICENSE)**.
-
-If you use Bifrost Proto in scientific research, please cite the repository. Citation information is available in [`CITATION.cff`](CITATION.cff). Third-party attribution and licensing details are in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+This research has been supported by the European Research Council through the
+Synergy Grant number 810218 ("The Whole Sun", ERC-2018-SyG); by the Centre
+National d'Etudes Spatiales (CNES) Solar Orbiter project; by the Research
+Council of Norway through its Centres of Excellence scheme, project number
+262622; and by grant CEX2025-001609-S, awarded to the Instituto de Astrofísica
+de Canarias under the Severo Ochoa Centre of Excellence program and funded by
+MICIU/AEI/10.13039/501100011033.
