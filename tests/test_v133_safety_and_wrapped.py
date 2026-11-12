@@ -24,8 +24,13 @@ def _binary_run(tmp_path, n=96):
         "aux=''\nmeshfile='mesh.mesh'\nu_l=1e8\nu_t=1e2\nu_r=1e-7\n"
     )
     shape = (n, n, n)
-    mm = np.memmap(tmp_path / "example_000.snap", dtype="<f4",
-                   mode="w+", shape=shape + (8,), order="F")
+    mm = np.memmap(
+        tmp_path / "example_000.snap",
+        dtype="<f4",
+        mode="w+",
+        shape=shape + (8,),
+        order="F",
+    )
     for i in range(8):
         mm[..., i] = i + 1
     xx = x[:, None, None]
@@ -46,24 +51,33 @@ def test_wrapped_halo_matches_full_crops_at_periodic_edges(tmp_path):
         for index in (0, 2, 94, 95):
             selection = {"i" + axis: index}
             plane = dd.get_var("divb", 0, br=True, units="bifrost", **selection)
-            np.testing.assert_array_equal(plane, np.take(full, index, axis="xyz".index(axis)))
+            np.testing.assert_array_equal(
+                plane, np.take(full, index, axis="xyz".index(axis))
+            )
     # Nested xup/ddxdn and Z operators retain crop correctness.
     for index in (0, 48, 95):
         plane = dd.get_var("curlb_z", 0, ix=index, br=True, units="bifrost")
-        np.testing.assert_array_equal(plane, np.take(
-            dd.get_var("curlb_z", 0, br=True, units="bifrost"), index, axis=0
-        ))
+        np.testing.assert_array_equal(
+            plane,
+            np.take(dd.get_var("curlb_z", 0, br=True, units="bifrost"), index, axis=0),
+        )
 
 
-def test_overwrite_requires_explicit_flag_and_preserves_memmap_inputs(tmp_path, monkeypatch):
+def test_overwrite_requires_explicit_flag_and_preserves_memmap_inputs(
+    tmp_path, monkeypatch
+):
     dd = _binary_run(tmp_path, n=8)
     path = tmp_path / "example_000.snap"
-    fields = [dd.get_var(name, 0, br=True, units="bifrost") for name in
-              ("r", "px", "py", "pz", "e", "bx", "by", "bz")]
+    fields = [
+        dd.get_var(name, 0, br=True, units="bifrost")
+        for name in ("r", "px", "py", "pz", "e", "bx", "by", "bz")
+    ]
     assert not fields[0].flags.writeable
     before = fields[0].copy()
     # No prompt must be displayed in either case (notebook-safe).
-    monkeypatch.setattr("builtins.input", lambda *args: pytest.fail("unexpected input()"))
+    monkeypatch.setattr(
+        "builtins.input", lambda *args: pytest.fail("unexpected input()")
+    )
     with pytest.raises(FileExistsError, match="overwrite=True"):
         dd.write_snap(path, *fields, overwrite=False)
     changed = list(fields)
@@ -71,7 +85,9 @@ def test_overwrite_requires_explicit_flag_and_preserves_memmap_inputs(tmp_path, 
     with pytest.warns(UserWarning, match="REPLACED"):
         dd.write_snap(path, *changed, overwrite=True)
     np.testing.assert_array_equal(dd.get_var("r", 0, br=True, units="bifrost"), before)
-    np.testing.assert_array_equal(dd.get_var("e", 0, br=True, units="bifrost"), changed[4])
+    np.testing.assert_array_equal(
+        dd.get_var("e", 0, br=True, units="bifrost"), changed[4]
+    )
 
 
 def test_xyz_point_returns_float32_and_public_cache_is_protected(tmp_path):
@@ -79,8 +95,15 @@ def test_xyz_point_returns_float32_and_public_cache_is_protected(tmp_path):
     for br in (True, False):
         x, y, z = dd.get_grid(br=br)
         for method in ("linear", "nearest"):
-            point = dd.get_var("r", 0, x=float(x[2]), y=float(y[2]),
-                               z=float(z[2]), method=method, br=br)
+            point = dd.get_var(
+                "r",
+                0,
+                x=float(x[2]),
+                y=float(y[2]),
+                z=float(z[2]),
+                method=method,
+                br=br,
+            )
             assert isinstance(point, np.float32)
     with dd.cache():
         b = dd.get_var("r", 0, br=True, units="bifrost")

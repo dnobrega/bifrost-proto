@@ -60,7 +60,9 @@ def test_public_stagger_physical_native_interpolation_equivalence(op):
     """Public physical stagger must be native Bifrost stagger plus reorientation."""
     dd = make_data(n=24)
     rng = np.random.default_rng(20260924)
-    native = np.asfortranarray(rng.normal(size=dd._grid_meta().shape).astype(np.float32))
+    native = np.asfortranarray(
+        rng.normal(size=dd._grid_meta().shape).astype(np.float32)
+    )
     physical = dd._reverse_yz_f(native)
 
     got = getattr(dd.stagger, op)(physical, br=False)
@@ -75,7 +77,9 @@ def test_public_stagger_physical_native_ddzdn_equivalence():
     """Physical Z derivatives must include the sign from the reversed Z axis."""
     dd = make_data(n=24)
     rng = np.random.default_rng(20260925)
-    native = np.asfortranarray(rng.normal(size=dd._grid_meta().shape).astype(np.float32))
+    native = np.asfortranarray(
+        rng.normal(size=dd._grid_meta().shape).astype(np.float32)
+    )
     physical = dd._reverse_yz_f(native)
 
     got = dd.stagger.ddzdn(physical, br=False)

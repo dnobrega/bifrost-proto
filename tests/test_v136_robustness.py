@@ -25,9 +25,12 @@ def test_periodic_expand_preserves_unwrapped_child_for_wide_window():
 
 @pytest.mark.parametrize("n", [72, 96])
 @pytest.mark.parametrize("variable", ["modcurlb", "curlb_z", "qlf"])
-@pytest.mark.parametrize("axis,low,high", [("x", 0, 60), ("x", 12, 70),
-                                          ("y", 0, 60), ("y", 12, 70)])
-def test_wide_periodic_selection_is_bitwise_full_crop(tmp_path, n, variable, axis, low, high):
+@pytest.mark.parametrize(
+    "axis,low,high", [("x", 0, 60), ("x", 12, 70), ("y", 0, 60), ("y", 12, 70)]
+)
+def test_wide_periodic_selection_is_bitwise_full_crop(
+    tmp_path, n, variable, axis, low, high
+):
     dd = _binary_run(tmp_path, n=n)
     full = dd.get_var(variable, 0, br=True, units="bifrost")
     selection = {"i" + axis: slice(low, high)}
@@ -46,8 +49,9 @@ def test_weak_cache_matches_strong_and_default_overrides(tmp_path):
     dd_weak = BifrostData("example", fdir=tmp_path, low_memory=True)
     assert dd_weak.low_memory is True
     inherited = dd_weak.get_var("uperpb", 0, ix=slice(3, 20), units="bifrost")
-    strong_override = dd_weak.get_var("uperpb", 0, ix=slice(3, 20),
-                                      units="bifrost", low_memory=False)
+    strong_override = dd_weak.get_var(
+        "uperpb", 0, ix=slice(3, 20), units="bifrost", low_memory=False
+    )
     np.testing.assert_array_equal(inherited, strong_override)
     np.testing.assert_array_equal(inherited, baseline)
 
@@ -61,6 +65,7 @@ def test_weak_cache_matches_strong_and_default_overrides(tmp_path):
 
 def test_weak_context_only_retains_live_numpy_objects():
     from weakref import WeakValueDictionary
+
     cache = WeakValueDictionary()
     arr = np.ones(4, dtype=np.float32)
     cache["x"] = arr
@@ -101,6 +106,7 @@ def test_write_aux_never_prompts_and_requires_overwrite(tmp_path, monkeypatch):
         np.memmap(destination, dtype="<f4", shape=(8, 8, 8), order="F"), p * 3
     )
 
+
 @pytest.mark.parametrize("periodic_axis", [0, 1])
 def test_512_periodic_axis_wide_window_matches_full(tmp_path, periodic_axis):
     """Exercise the original 512-grid bug without allocating a full 512^3 run."""
@@ -116,8 +122,13 @@ def test_512_periodic_axis_wide_window_matches_full(tmp_path, periodic_axis):
         "do_mhd=.true.\ndo_hion=.false.\ndo_helium=.false.\n"
         "aux=''\nmeshfile='mesh.mesh'\nu_l=1e8\nu_t=1e2\nu_r=1e-7\n"
     )
-    a = np.memmap(tmp_path / "example_000.snap", dtype="<f4", mode="w+",
-                  shape=shape + (8,), order="F")
+    a = np.memmap(
+        tmp_path / "example_000.snap",
+        dtype="<f4",
+        mode="w+",
+        shape=shape + (8,),
+        order="F",
+    )
     for field in range(8):
         a[..., field] = np.float32(field + 1)
     if periodic_axis == 0:

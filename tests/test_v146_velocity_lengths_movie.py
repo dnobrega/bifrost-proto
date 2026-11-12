@@ -23,8 +23,15 @@ from test_v144_plot_presets_colormaps import DummyData
 
 
 VELOCITY_COMPONENTS = (
-    "u_x", "u_y", "u_z", "uparb_x", "uparb_y", "uparb_z",
-    "uperpb_x", "uperpb_y", "uperpb_z",
+    "u_x",
+    "u_y",
+    "u_z",
+    "uparb_x",
+    "uparb_y",
+    "uparb_z",
+    "uperpb_x",
+    "uperpb_y",
+    "uperpb_z",
 )
 LENGTHS = {
     "ldivb": ("modb", "divb", quantities.get_ldivb),
@@ -57,13 +64,18 @@ class FakeGetter:
         return self.values[name]
 
 
-@pytest.mark.parametrize("name,numerator,denominator,getter", [
-    (name, *inputs) for name, inputs in LENGTHS.items()
-])
-def test_characteristic_length_values_and_zero_limits(name, numerator, denominator, getter):
+@pytest.mark.parametrize(
+    "name,numerator,denominator,getter",
+    [(name, *inputs) for name, inputs in LENGTHS.items()],
+)
+def test_characteristic_length_values_and_zero_limits(
+    name, numerator, denominator, getter
+):
     values = {
         numerator: np.array([4, 4, 0, 0], dtype="f4"),
-        denominator: np.array([-2 if name.startswith("ldiv") else 2, 0, 3, 0], dtype="f4"),
+        denominator: np.array(
+            [-2 if name.startswith("ldiv") else 2, 0, 3, 0], dtype="f4"
+        ),
     }
     # The magnitude of a curl is non-negative; divergence can be signed.
     data = FakeGetter(**values)
@@ -86,6 +98,7 @@ def test_length_unit_factors_and_latex_labels():
     for name in LENGTHS:
         assert units.label("length", "solar") == "Mm"
         from bifrost_proto.labels import latex_varname
+
         label = latex_varname(name)
         assert "nabla" in label and "mathbf" in label
     # The norm now scales as length rather than inverse length.
@@ -114,7 +127,9 @@ def test_publication_interrupted_copy_keeps_source(tmp_path, monkeypatch):
     partial.unlink()
 
 
-def test_published_movie_cleanup_failure_is_logged_not_raised(tmp_path, monkeypatch, caplog):
+def test_published_movie_cleanup_failure_is_logged_not_raised(
+    tmp_path, monkeypatch, caplog
+):
     destination = tmp_path / "published.mp4"
     partial = _new_partial_movie(destination)
     partial.write_bytes(b"complete encoded data")
@@ -136,7 +151,9 @@ def test_published_movie_cleanup_failure_is_logged_not_raised(tmp_path, monkeypa
 
 
 @pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg unavailable")
-def test_movie_keyboard_interrupt_during_publication_keeps_encoded(tmp_path, monkeypatch):
+def test_movie_keyboard_interrupt_during_publication_keeps_encoded(
+    tmp_path, monkeypatch
+):
     from test_v142_review_fixes import _run
 
     dd = _run(tmp_path)
@@ -146,8 +163,16 @@ def test_movie_keyboard_interrupt_during_publication_keeps_encoded(tmp_path, mon
 
     monkeypatch.setattr("bifrost_proto.movie._publish_movie", stop_publish)
     with pytest.raises(KeyboardInterrupt):
-        dd.movie("r", [0], y=1.0, cbar=False, title=False,
-                 progress=False, output="stopped.mp4", dpi=72)
+        dd.movie(
+            "r",
+            [0],
+            y=1.0,
+            cbar=False,
+            title=False,
+            progress=False,
+            output="stopped.mp4",
+            dpi=72,
+        )
     dest = tmp_path / "movies" / "stopped.mp4"
     assert not dest.exists()
     temps = list(dest.parent.glob(".*.partial.mp4"))

@@ -27,9 +27,9 @@ def _roi_suffix(axis: str, selections: dict[str, Any] | None) -> str:
         region = selections[key]
         if region.start is None and region.stop is None:
             continue  # Same as selecting the complete axis.
-        start = "min" if region.start is None else _coordinate_label(float(region.start))
+        start = (
+            "min" if region.start is None else _coordinate_label(float(region.start))
+        )
         stop = "max" if region.stop is None else _coordinate_label(float(region.stop))
         fragments.append(f"_{key}={start}-{stop}")
     return "".join(fragments)
-
-

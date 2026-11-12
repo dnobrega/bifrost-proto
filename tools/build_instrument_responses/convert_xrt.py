@@ -10,19 +10,34 @@ from common import readsav_response, sha256sum, write_response
 
 
 VALID_NAMES = {
-    "xrt_almed", "xrt_almesh", "xrt_alpoly", "xrt_althick", "xrt_bemed",
-    "xrt_bethick", "xrt_bethin", "xrt_cpoly", "xrt_tipoly",
+    "xrt_almed",
+    "xrt_almesh",
+    "xrt_alpoly",
+    "xrt_althick",
+    "xrt_bemed",
+    "xrt_bethick",
+    "xrt_bethin",
+    "xrt_cpoly",
+    "xrt_tipoly",
 }
 
 
 def main():
     """Command-line entry point."""
-    parser = argparse.ArgumentParser(description="Convert one legacy XRT ne-T IDL response table.")
-    parser.add_argument("source", help="Legacy .sav containing table, density and temperature")
+    parser = argparse.ArgumentParser(
+        description="Convert one legacy XRT ne-T IDL response table."
+    )
+    parser.add_argument(
+        "source", help="Legacy .sav containing table, density and temperature"
+    )
     parser.add_argument("--name", required=True, choices=sorted(VALID_NAMES))
-    parser.add_argument("--output-root", required=True, help="instrument_responses directory")
+    parser.add_argument(
+        "--output-root", required=True, help="instrument_responses directory"
+    )
     parser.add_argument("--abundance", default="Asplund 2021 coronal")
-    parser.add_argument("--ionization-equilibrium", default="legacy table; see original source")
+    parser.add_argument(
+        "--ionization-equilibrium", default="legacy table; see original source"
+    )
     parser.add_argument("--fill-value", type=float, default=0.0)
     args = parser.parse_args()
 

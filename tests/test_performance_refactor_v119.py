@@ -10,9 +10,11 @@ def test_getz_uniform_z_matches_full_domain_uniformization_grid():
     # exercise the new coordinate-only path without involving field data.
     meta = dd._meta(0)
     z_native = np.asarray(meta.z, dtype=np.float64)
-    z_native[:] = z_native[0] + np.sign(z_native[-1] - z_native[0]) * np.linspace(
-        0.0, abs(z_native[-1] - z_native[0]), z_native.size
-    ) ** 1.2
+    z_native[:] = (
+        z_native[0]
+        + np.sign(z_native[-1] - z_native[0])
+        * np.linspace(0.0, abs(z_native[-1] - z_native[0]), z_native.size) ** 1.2
+    )
 
     for br in (False, True):
         z = dd.get_z(br=br)
@@ -27,7 +29,9 @@ def test_getz_uniform_z_matches_full_domain_uniformization_grid():
 def test_dot3_numba_matches_explicit_float32_reference():
     rng = np.random.default_rng(123)
     shape = (13, 11, 9)
-    arrays = [np.array(rng.normal(size=shape), dtype=np.float32, order="F") for _ in range(6)]
+    arrays = [
+        np.array(rng.normal(size=shape), dtype=np.float32, order="F") for _ in range(6)
+    ]
     ax, ay, az, bx, by, bz = arrays
 
     got = quantities._dot3_arrays(ax, ay, az, bx, by, bz)
@@ -45,7 +49,9 @@ def test_dot3_numba_matches_explicit_float32_reference():
 def test_negative_cross_term_numba_matches_numpy_reference():
     rng = np.random.default_rng(456)
     shape = (12, 10, 8)
-    arrays = [np.array(rng.normal(size=shape), dtype=np.float32, order="F") for _ in range(4)]
+    arrays = [
+        np.array(rng.normal(size=shape), dtype=np.float32, order="F") for _ in range(4)
+    ]
     a, b, c, d = arrays
     got = quantities._negative_cross_term_arrays(a, b, c, d)
     expected = -(a * b - c * d)
@@ -65,7 +71,9 @@ def test_timescale_numba_preserves_zero_inf_sign_and_nan_semantics():
 def test_acute_cosine_kernel_matches_vectorized_reference():
     rng = np.random.default_rng(789)
     shape = (11, 9, 7)
-    vals = [np.array(rng.normal(size=shape), dtype=np.float32, order="F") for _ in range(6)]
+    vals = [
+        np.array(rng.normal(size=shape), dtype=np.float32, order="F") for _ in range(6)
+    ]
     jx, jy, jz, bx, by, bz = vals
     # One undefined point exercises the explicit NaN path.
     jx[0, 0, 0] = jy[0, 0, 0] = jz[0, 0, 0] = 0.0

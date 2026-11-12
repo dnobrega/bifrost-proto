@@ -137,6 +137,14 @@ def test_poynting_latex_labels():
     assert dd.get_var_name("sp_ideal_z", latex=True) == r"$S^{\mathrm{ideal}}_z$"
     assert dd.get_var_name("sp_h", latex=True) == r"$S_h$"
     assert dd.get_var_name("modsp", latex=True) == r"$|\mathbf{S}|$"
-    assert dd.get_var_name("modsp_ideal", latex=True) == r"$|\mathbf{S}^{\mathrm{ideal}}|$"
-    assert dd.get_var_name("sp_ideal_emerg_z", latex=True) == r"$S^{\mathrm{ideal}}_{z,\mathrm{emerg}}$"
-    assert dd.get_var_name("sp_ideal_shear_z", latex=True) == r"$S^{\mathrm{ideal}}_{z,\mathrm{shear}}$"
+    assert (
+        dd.get_var_name("modsp_ideal", latex=True) == r"$|\mathbf{S}^{\mathrm{ideal}}|$"
+    )
+    assert (
+        dd.get_var_name("sp_ideal_emerg_z", latex=True)
+        == r"$S^{\mathrm{ideal}}_{z,\mathrm{emerg}}$"
+    )
+    assert (
+        dd.get_var_name("sp_ideal_shear_z", latex=True)
+        == r"$S^{\mathrm{ideal}}_{z,\mathrm{shear}}$"
+    )

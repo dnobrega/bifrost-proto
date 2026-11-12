@@ -1,4 +1,5 @@
 """Microbenchmark the v0.1.19 fused algebra helpers on float32 cubes."""
+
 from __future__ import annotations
 
 import argparse
@@ -28,7 +29,9 @@ def main():
     n = args.n
     shape = (n, n, n)
     rng = np.random.default_rng(1234)
-    a = [np.array(rng.normal(size=shape), dtype=np.float32, order="F") for _ in range(6)]
+    a = [
+        np.array(rng.normal(size=shape), dtype=np.float32, order="F") for _ in range(6)
+    ]
     ax, ay, az, bx, by, bz = a
 
     # Warm Numba before timing.
@@ -41,7 +44,10 @@ def main():
     timed("dot3 NumPy reference", lambda: ax * bx + ay * by + az * bz)
     timed("dot3 fused Numba", lambda: quantities._dot3_arrays(ax, ay, az, bx, by, bz))
     timed("E term NumPy", lambda: -(ax * ay - az * bx))
-    timed("E term fused Numba", lambda: quantities._negative_cross_term_arrays(ax, ay, az, bx))
+    timed(
+        "E term fused Numba",
+        lambda: quantities._negative_cross_term_arrays(ax, ay, az, bx),
+    )
 
     def theta_numpy():
         """Helper used by benchmark algebra v119."""

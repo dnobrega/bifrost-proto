@@ -56,5 +56,7 @@ def test_python_functions_and_classes_are_documented():
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
                 if ast.get_docstring(node) is None:
-                    missing.append(f"{path.relative_to(root)}:{node.lineno}:{node.name}")
+                    missing.append(
+                        f"{path.relative_to(root)}:{node.lineno}:{node.name}"
+                    )
     assert not missing, "Missing docstrings:\n" + "\n".join(missing)

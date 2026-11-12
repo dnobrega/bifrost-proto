@@ -27,7 +27,7 @@ def _tau500_serial_reference(ne, nh, temperature, z_cm, out):
                 quantities._TAU500_HMINUS_SAHA
                 * ne[i, j, 0]
                 * quantities._TAU500_HMINUS_SIGMA_CM2
-                / (t ** 1.5)
+                / (t**1.5)
                 * np.exp(exponent_constant / t)
                 * nh[i, j, 0]
             )
@@ -43,14 +43,11 @@ def _tau500_serial_reference(ne, nh, temperature, z_cm, out):
                     quantities._TAU500_HMINUS_SAHA
                     * ne[i, j, k]
                     * quantities._TAU500_HMINUS_SIGMA_CM2
-                    / (t ** 1.5)
+                    / (t**1.5)
                     * np.exp(exponent_constant / t)
                     * nh[i, j, k]
                 )
-                out[i, j, k] = (
-                    out[i, j, k - 1]
-                    + 0.5 * (chi_prev[i, j] + chi) * dz_cm
-                )
+                out[i, j, k] = out[i, j, k - 1] + 0.5 * (chi_prev[i, j] + chi) * dz_cm
                 chi_prev[i, j] = chi
 
 
@@ -64,9 +61,15 @@ def test_parallel_tau500_is_bitwise_equal_to_v122_serial_kernel():
     rng = np.random.default_rng(123)
     shape = (19, 13, 11)
 
-    ne = np.array(10.0 ** rng.uniform(10.0, 13.0, size=shape), dtype=np.float32, order="F")
-    nh = np.array(10.0 ** rng.uniform(14.0, 17.0, size=shape), dtype=np.float32, order="F")
-    temperature = np.array(rng.uniform(4000.0, 15000.0, size=shape), dtype=np.float32, order="F")
+    ne = np.array(
+        10.0 ** rng.uniform(10.0, 13.0, size=shape), dtype=np.float32, order="F"
+    )
+    nh = np.array(
+        10.0 ** rng.uniform(14.0, 17.0, size=shape), dtype=np.float32, order="F"
+    )
+    temperature = np.array(
+        rng.uniform(4000.0, 15000.0, size=shape), dtype=np.float32, order="F"
+    )
 
     # Deliberately non-uniform native Bifrost center grid in centimeters.
     dz = rng.uniform(4.0e6, 1.6e7, size=shape[2] - 1)

@@ -61,7 +61,9 @@ def test_stored_and_hion_thermodynamics_take_precedence_over_eos():
     assert np.all(dd.get_var("kr", 0, units="bifrost", br=True) == 5.0)
 
     # Explicit EOS names still force the table even when AUX p exists.
-    assert np.allclose(dd.get_var("pg_eos", 0, units="bifrost", br=True), 3.2e5 / dd._meta(0).units.u_p)
+    assert np.allclose(
+        dd.get_var("pg_eos", 0, units="bifrost", br=True), 3.2e5 / dd._meta(0).units.u_p
+    )
 
 
 def test_pg_prefers_aux_p_and_keeps_raw_pg_compatibility():

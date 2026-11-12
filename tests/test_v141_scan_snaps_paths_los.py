@@ -6,6 +6,7 @@ import shutil
 import subprocess
 
 import matplotlib
+
 matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,9 +26,17 @@ def _data(n=20):
 def test_snaps_requires_idl_and_snap_and_rescans(tmp_path):
     dd = BifrostData("my_run", folder=tmp_path)
     assert dd.snaps == []
-    for filename in ("my_run_000.idl", "my_run_002.idl", "my_run_010.idl",
-                     "my_run_002.snap", "other_run_004.idl", "my_run_001.snap",
-                     "my_run.idl.scr", "my_run_020.idl.scr", "my_run_bad.idl"):
+    for filename in (
+        "my_run_000.idl",
+        "my_run_002.idl",
+        "my_run_010.idl",
+        "my_run_002.snap",
+        "other_run_004.idl",
+        "my_run_001.snap",
+        "my_run.idl.scr",
+        "my_run_020.idl.scr",
+        "my_run_bad.idl",
+    ):
         (tmp_path / filename).touch()
     folder = tmp_path / "subfolder"
     folder.mkdir()
@@ -57,16 +66,20 @@ def test_scan_positions_respect_stagger_and_native_z():
     dd = _data(n=23)
     for var, axis in [("bx", "x"), ("by", "y"), ("bz", "z"), ("r", "z")]:
         full = np.asarray(dd.get_grid(location=dd.get_location(var))["xyz".index(axis)])
-        selected = _scan_positions(dd, var, 0, axis, {"x": None, "y": None, "z": None}, 3)
+        selected = _scan_positions(
+            dd, var, 0, axis, {"x": None, "y": None, "z": None}, 3
+        )
         np.testing.assert_array_equal(selected, full[::3])
 
 
 def test_scan_coordinate_physical_roi_and_every():
     dd = _data(n=24)
     xx, yy, zz = dd.get_grid(location=dd.get_location("r"))
-    roi = {"x": slice(float(xx[2]), float(xx[20])),
-           "y": slice(float(yy[3]), float(yy[19])),
-           "z": slice(float(zz[4]), float(zz[18]))}
+    roi = {
+        "x": slice(float(xx[2]), float(xx[20])),
+        "y": slice(float(yy[3]), float(yy[19])),
+        "z": slice(float(zz[4]), float(zz[18])),
+    }
     expected = dd.get_grid(location="center", **roi)[1][::4]
     np.testing.assert_array_equal(_scan_positions(dd, "r", 0, "y", roi, 4), expected)
 
@@ -88,11 +101,23 @@ def test_real_reader_spatial_movie_reads_one_plane_per_frame(tmp_path, axis):
         return original_get_var(var, snap, **kwargs)
 
     dd.get_var = track
-    target = movie(dd, "r", 0, scan=axis, every=3, **{axis: roi},
-                   fps=12, dpi=72, figsize=(4, 3),
-                   progress=False, cbar=False)
+    target = movie(
+        dd,
+        "r",
+        0,
+        scan=axis,
+        every=3,
+        **{axis: roi},
+        fps=12,
+        dpi=72,
+        figsize=(4, 3),
+        progress=False,
+        cbar=False,
+    )
     assert target.is_file() and target.parent == tmp_path / "movies"
-    assert target.name.startswith(f"r_0000_{dict(x='YZ', y='XZ', z='XY')[axis]}_scan-{axis}=")
+    assert target.name.startswith(
+        f"r_0000_{dict(x='YZ', y='XZ', z='XY')[axis]}_scan-{axis}="
+    )
     assert f"_every=0003.mp4" in target.name
     assert len(calls) == len(wanted)  # No re-read of first plane.
     assert all(int(snap) == 0 for snap, _ in calls)
@@ -101,11 +126,22 @@ def test_real_reader_spatial_movie_reads_one_plane_per_frame(tmp_path, axis):
         assert kwargs["uniform_z"] == (axis != "z")
         assert all(kwargs[other] is None for other in "xyz" if other != axis)
     if shutil.which("ffprobe"):
-        count = subprocess.check_output([
-            "ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0",
-            "-show_entries", "stream=nb_read_frames",
-            "-of", "default=nokey=1:noprint_wrappers=1", str(target),
-        ], text=True).strip()
+        count = subprocess.check_output(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-count_frames",
+                "-select_streams",
+                "v:0",
+                "-show_entries",
+                "stream=nb_read_frames",
+                "-of",
+                "default=nokey=1:noprint_wrappers=1",
+                str(target),
+            ],
+            text=True,
+        ).strip()
         assert int(count) == len(wanted)
     with pytest.raises(FileExistsError):
         movie(dd, "r", 0, scan=axis, every=3, **{axis: roi}, progress=False)
@@ -138,10 +174,12 @@ def test_png_paths_use_simulation_directory_and_absolute_works(tmp_path, monkeyp
     working.mkdir()
     monkeypatch.chdir(working)
     y = float(dd.get_y()[6])
-    for name, expected in [(True, sim / "plots"),
-                           ("my_plot.png", sim / "plots"),
-                           ("reports/my_plot.png", sim / "reports"),
-                           (str(tmp_path / "absolute.png"), tmp_path)]:
+    for name, expected in [
+        (True, sim / "plots"),
+        ("my_plot.png", sim / "plots"),
+        ("reports/my_plot.png", sim / "reports"),
+        (str(tmp_path / "absolute.png"), tmp_path),
+    ]:
         fig, _, _ = dd.plot("r", 0, y=y, png=name, cbar=False, figsize=(2, 2))
         plt.close(fig)
         assert len(list(expected.glob("*.png"))) > 0
@@ -205,8 +243,9 @@ def test_los_periodic_nonconstant_matches_conservative_centering():
     """For periodic fields the integral must agree across stagger positions."""
     dd = _data(n=32)
     i = np.arange(32, dtype=np.float32)
-    wave = (3 + np.sin(2 * np.pi * i / 32)
-            + 0.23 * np.cos(8 * np.pi * i / 32)).astype(np.float32)
+    wave = (3 + np.sin(2 * np.pi * i / 32) + 0.23 * np.cos(8 * np.pi * i / 32)).astype(
+        np.float32
+    )
     for var, axis in (("bx", "x"), ("by", "y")):
         dd.arrays[var][:] = wave[:, None, None] if axis == "x" else wave[None, :, None]
         face = dd.get_var(var, 0, units="solar")
@@ -231,8 +270,21 @@ def test_movie_relative_folder_path_uses_run_root(tmp_path):
 
     dd = BifrostData("run", folder=tmp_path)
     seq = np.array([0, 2, 4])
-    assert _output_path(dd, "r", seq, 2, "y", 1., "XZ",
-                        "reports/out.mp4", None) == tmp_path / "reports/out.mp4"
-    assert _scan_output_path(dd, "r", 0, "z", np.array([0., 1.]), 2,
-                             "reports/out.mp4", None,
-                             {"x": None, "y": None, "z": None}) == tmp_path / "reports/out.mp4"
+    assert (
+        _output_path(dd, "r", seq, 2, "y", 1.0, "XZ", "reports/out.mp4", None)
+        == tmp_path / "reports/out.mp4"
+    )
+    assert (
+        _scan_output_path(
+            dd,
+            "r",
+            0,
+            "z",
+            np.array([0.0, 1.0]),
+            2,
+            "reports/out.mp4",
+            None,
+            {"x": None, "y": None, "z": None},
+        )
+        == tmp_path / "reports/out.mp4"
+    )

@@ -20,11 +20,23 @@ def main():
         )
     )
     parser.add_argument("source", help="Legacy HRI 174 response FITS")
-    parser.add_argument("--nh-over-ne", required=True, help="proton_dens(T) helper: .npy, text, or IDL .sav")
-    parser.add_argument("--nh-var", default="nhone", help="variable name when --nh-over-ne is an IDL .sav")
-    parser.add_argument("--output-root", required=True, help="instrument_responses directory")
+    parser.add_argument(
+        "--nh-over-ne",
+        required=True,
+        help="proton_dens(T) helper: .npy, text, or IDL .sav",
+    )
+    parser.add_argument(
+        "--nh-var",
+        default="nhone",
+        help="variable name when --nh-over-ne is an IDL .sav",
+    )
+    parser.add_argument(
+        "--output-root", required=True, help="instrument_responses directory"
+    )
     parser.add_argument("--abundance", default="sun_coronal_1992_feldman_ext.abund")
-    parser.add_argument("--ionization-equilibrium", default="legacy FITS response; see original source")
+    parser.add_argument(
+        "--ionization-equilibrium", default="legacy FITS response; see original source"
+    )
     parser.add_argument("--fill-value", type=float, default=1.0e-32)
     args = parser.parse_args()
 
@@ -38,18 +50,26 @@ def main():
     raw, header = fits.getdata(args.source, header=True)
     nt = int(header["NAXIS1"])
     nne = int(header["NAXIS2"])
-    logt = np.linspace(np.log10(float(header["TMIN"])), np.log10(float(header["TMAX"])), nt)
+    logt = np.linspace(
+        np.log10(float(header["TMIN"])), np.log10(float(header["TMAX"])), nt
+    )
     # Legacy FITS density limits are m^-3; runtime response axes use cm^-3.
-    logne = np.linspace(np.log10(float(header["NMIN"])) - 6.0, np.log10(float(header["NMAX"])) - 6.0, nne)
+    logne = np.linspace(
+        np.log10(float(header["NMIN"])) - 6.0,
+        np.log10(float(header["NMAX"])) - 6.0,
+        nne,
+    )
 
     table, logne, logt = canonicalize_table(raw, logne, logt)
     nh_over_ne = load_vector(args.nh_over_ne, sav_variable=args.nh_var)
     if nh_over_ne.size != nt:
-        raise ValueError(f"--nh-over-ne has {nh_over_ne.size} values; expected NAXIS1={nt}")
+        raise ValueError(
+            f"--nh-over-ne has {nh_over_ne.size} values; expected NAXIS1={nt}"
+        )
     if np.any(nh_over_ne <= 0.0) or not np.all(np.isfinite(nh_over_ne)):
         raise ValueError("--nh-over-ne must contain finite positive values")
 
-    ne = 10.0 ** logne
+    ne = 10.0**logne
     # Reproduce the IDL normalization exactly:
     #   goft /= 1e2          (DN m^-1 -> DN cm^-1)
     #   goft /= ne^2

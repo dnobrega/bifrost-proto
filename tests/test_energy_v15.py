@@ -27,12 +27,14 @@ def make_constant_energy_data(n=24, include_q=True):
         "pg": np.full(shape, 7.0, dtype=np.float32),
     }
     if include_q:
-        arrays.update({
-            "qjoule": np.full(shape, 4.0, dtype=np.float32),
-            "qvisc": np.full(shape, 2.0, dtype=np.float32),
-            "qthin": np.full(shape, -5.0, dtype=np.float32),
-            "qspitz": np.zeros(shape, dtype=np.float32),
-        })
+        arrays.update(
+            {
+                "qjoule": np.full(shape, 4.0, dtype=np.float32),
+                "qvisc": np.full(shape, 2.0, dtype=np.float32),
+                "qthin": np.full(shape, -5.0, dtype=np.float32),
+                "qspitz": np.zeros(shape, dtype=np.float32),
+            }
+        )
     return ArrayData(arrays, x, y, z)
 
 
@@ -56,8 +58,12 @@ def test_stored_q_terms_over_r_and_timescales_preserve_sign():
     }
     for name, (q, qor, tau) in expected.items():
         assert np.all(interior(dd.get_var(name, 0, units="bifrost", br=True)) == q)
-        assert np.allclose(interior(dd.get_var(name + "or", 0, units="bifrost", br=True)), qor)
-        assert np.allclose(interior(dd.get_var("tau" + name, 0, units="bifrost", br=True)), tau)
+        assert np.allclose(
+            interior(dd.get_var(name + "or", 0, units="bifrost", br=True)), qor
+        )
+        assert np.allclose(
+            interior(dd.get_var("tau" + name, 0, units="bifrost", br=True)), tau
+        )
 
     # q=0 means no finite characteristic timescale.
     tau = dd.get_var("tauqspitz", 0, units="bifrost", br=True)
@@ -143,8 +149,12 @@ def test_qlf_subdomain_matches_full_domain_exactly():
     dd, _ = make_lorentz_data(n=28)
     full = dd.get_var("qlf", 0, units="bifrost", br=True)
     sub = dd.get_var(
-        "qlf", 0,
-        ix=slice(8, 18), iy=slice(9, 19), iz=slice(7, 17),
-        units="bifrost", br=True,
+        "qlf",
+        0,
+        ix=slice(8, 18),
+        iy=slice(9, 19),
+        iz=slice(7, 17),
+        units="bifrost",
+        br=True,
     )
     assert np.array_equal(sub, full[8:18, 9:19, 7:17])

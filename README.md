@@ -42,8 +42,8 @@ yy = dd.get_y()
 zz = dd.get_z()
 
 # Read physical quantities
-tg = dd.get_var("tg", snap)                                       # Full 3D cube
-bz = dd.get_var("b_z", snap, x=slice(2, 12), y=slice(0, 10), z=2) # 2D subdomain
+tg = dd.get_var("tg", snap)  # Full 3D cube
+bz = dd.get_var("b_z", snap, x=slice(2, 12), y=slice(0, 10), z=2)  # 2D subdomain
 uz = dd.get_var("u_z", snap, x=25.5, centered=True, units="cgs")  # Centered YZ plane
 ```
 
@@ -73,14 +73,17 @@ dd.plot("tg", snap, z=2)
 
 # Overlay a |B| = 100 G contour and save the PNG
 dd.plot(
-    "tg", snap, z=1.5,
+    "tg",
+    snap,
+    z=1.5,
     contours={
         "var": "modb",
         "levels": [1e2],
         "colors": "white",
         "linewidths": 0.7,
     },
-    png=True, overwrite=True,
+    png=True,
+    overwrite=True,
 )
 ```
 
@@ -98,7 +101,9 @@ dd.plot("aia193", snap, y=2, norm=LogNorm(clip=True))
 
 # LOS-integrated intensity, with an explicit color scale
 dd.plot(
-    "aia193", snap, los="z",
+    "aia193",
+    snap,
+    los="z",
     cmap="aia193",
     norm=LogNorm(vmin=1, vmax=2e4),
 )

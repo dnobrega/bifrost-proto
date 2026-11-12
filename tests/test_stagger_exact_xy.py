@@ -26,7 +26,9 @@ def test_xup_uses_legacy_grouped_float32_arithmetic():
     x = np.arange(shape[0], dtype=np.float32) * np.float32(0.1)
     y = np.arange(shape[1], dtype=np.float32) * np.float32(0.2)
     z = np.linspace(0.0, 1.0, shape[2], dtype=np.float32)
-    g = StaggerGrid(x, x-0.05, y, y-0.1, z, z-0.01, dx=np.float32(0.1), dy=np.float32(0.2))
+    g = StaggerGrid(
+        x, x - 0.05, y, y - 0.1, z, z - 0.01, dx=np.float32(0.1), dy=np.float32(0.2)
+    )
     got = g.xup(f)
     ref = _manual_xup(f)
     assert np.array_equal(got, ref)

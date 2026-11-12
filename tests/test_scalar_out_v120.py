@@ -4,7 +4,7 @@ from bifrost_proto import quantities
 
 
 class DummyData:
-    def __init__(self, arrays, gamma=np.float32(5.0/3.0), grav=np.float32(2.74)):
+    def __init__(self, arrays, gamma=np.float32(5.0 / 3.0), grav=np.float32(2.74)):
         self.arrays = arrays
         self._gamma = gamma
         self._grav = grav
@@ -16,6 +16,7 @@ class DummyData:
         class _Units:
             u_l = 1e8
             u_t = 1e2
+
         units = _Units()
         params = {}
 
@@ -48,7 +49,10 @@ def test_scalar_out_paths_match_v119_expressions():
         quantities.get_eb(dd, 0, None, None), np.float32(0.5) * b * b, rtol=0, atol=0
     )
     np.testing.assert_allclose(
-        quantities.get_ek(dd, 0, None, None), np.float32(0.5) * r * u * u, rtol=0, atol=0
+        quantities.get_ek(dd, 0, None, None),
+        np.float32(0.5) * r * u * u,
+        rtol=0,
+        atol=0,
     )
     np.testing.assert_allclose(
         quantities.get_qpdv(dd, 0, None, None), -pg * divu, rtol=0, atol=0
@@ -61,7 +65,10 @@ def test_scalar_out_paths_match_v119_expressions():
     )
     gamma = np.float32(5.0 / 3.0)
     np.testing.assert_allclose(
-        quantities.get_cs_gamma(dd, 0, None, None), np.sqrt(gamma * pg / r), rtol=0, atol=0
+        quantities.get_cs_gamma(dd, 0, None, None),
+        np.sqrt(gamma * pg / r),
+        rtol=0,
+        atol=0,
     )
     grav = np.float32(2.74)
     np.testing.assert_allclose(

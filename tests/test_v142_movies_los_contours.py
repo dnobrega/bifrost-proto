@@ -6,6 +6,7 @@ import shutil
 import subprocess
 
 import matplotlib
+
 matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,9 +31,21 @@ def test_filename_float32_scan_and_roi(tmp_path):
     dd = _data()
     dd.fdir = str(tmp_path)
     pos = np.array([0.0, np.float32(51.1)], dtype=np.float64)
-    p = _scan_output_path(dd, "modb", 299, "y", pos, 1, None, None, {
-        "x": slice(np.float32(0), np.float32(18.1)), "y": None, "z": None,
-    })
+    p = _scan_output_path(
+        dd,
+        "modb",
+        299,
+        "y",
+        pos,
+        1,
+        None,
+        None,
+        {
+            "x": slice(np.float32(0), np.float32(18.1)),
+            "y": None,
+            "z": None,
+        },
+    )
     assert p.name == "modb_0299_XZ_scan-y=0.00-51.10_every=0001_x=0.00-18.10.mp4"
     assert _coordinate_label(-0.0) == "0.00"
     assert _coordinate_label(-0.00001) == "0.00"
@@ -41,8 +54,11 @@ def test_filename_float32_scan_and_roi(tmp_path):
 def test_centered_contours_use_center_coordinates(monkeypatch):
     dd = _data(22)
     xx, yy, zz = dd.get_grid(location="center")
-    selection = {"y": float(yy[8]), "x": slice(float(xx[3]), float(xx[16])),
-                 "z": slice(float(zz[3]), float(zz[18]))}
+    selection = {
+        "y": float(yy[8]),
+        "x": slice(float(xx[3]), float(xx[16])),
+        "z": slice(float(zz[3]), float(zz[18])),
+    }
     captured = {}
     real = Axes.contour
 
@@ -51,9 +67,18 @@ def test_centered_contours_use_center_coordinates(monkeypatch):
         return real(self, x, z, value, **opts)
 
     monkeypatch.setattr(Axes, "contour", record)
-    fig, _, _ = dd.plot("r", 0, **selection, cbar=False, contours={
-        "var": "bx", "centered": True, "levels": 4, "colors": "white",
-    })
+    fig, _, _ = dd.plot(
+        "r",
+        0,
+        **selection,
+        cbar=False,
+        contours={
+            "var": "bx",
+            "centered": True,
+            "levels": 4,
+            "colors": "white",
+        },
+    )
     try:
         expected = dd.get_var("bx", 0, **selection, uniform_z=True, centered=True)
         xc, _, zc = dd.get_grid(location="center", **selection, uniform_z=True)
@@ -92,18 +117,26 @@ def test_contour_default_aligns_with_centered_background(monkeypatch):
     assert not np.array_equal(records[0][0], records[1][0])
 
 
-@pytest.mark.parametrize("var,los", [
-    ("r", "x"), ("r", "y"), ("r", "z"),
-    ("bx", "x"), ("by", "y"), ("bz", "z"),
-])
+@pytest.mark.parametrize(
+    "var,los",
+    [
+        ("r", "x"),
+        ("r", "y"),
+        ("r", "z"),
+        ("bx", "x"),
+        ("by", "y"),
+        ("bz", "z"),
+    ],
+)
 def test_los_stream_matches_volume_and_never_reads_cube(var, los, monkeypatch):
     from bifrost_proto import plotting
 
     monkeypatch.setattr(plotting, "_LOS_SLAB", 4)
     dd = _data(17)
     sel = {"x": None, "y": None, "z": None}
-    volume, _ = _integrated_plane(dd, var, 0, los=los, selection=sel,
-                                  units="solar", low_memory=None)
+    volume, _ = _integrated_plane(
+        dd, var, 0, los=los, selection=sel, units="solar", low_memory=None
+    )
     calls = []
     native = dd.get_var
 
@@ -113,14 +146,17 @@ def test_los_stream_matches_volume_and_never_reads_cube(var, los, monkeypatch):
         return result
 
     dd.get_var = track
-    streamed, _ = _integrated_plane(dd, var, 0, los=los, selection=sel,
-                                    units="solar", low_memory=None, stream=True)
+    streamed, _ = _integrated_plane(
+        dd, var, 0, los=los, selection=sel, units="solar", low_memory=None, stream=True
+    )
     np.testing.assert_allclose(streamed, volume, rtol=1e-6, atol=1e-8)
     # Slabs of at most 4 planes on a non-LOS axis (z for LOS y, y otherwise).
     cut = "z" if los == "y" else "y"
     assert len(calls) == -(-17 // 4)
     assert all(ndim == 3 for ndim, _ in calls)
-    assert all(kwargs[f"i{cut}"].stop - kwargs[f"i{cut}"].start <= 4 for _, kwargs in calls)
+    assert all(
+        kwargs[f"i{cut}"].stop - kwargs[f"i{cut}"].start <= 4 for _, kwargs in calls
+    )
     assert all(cut not in kwargs for _, kwargs in calls)
     assert all(kwargs["uniform_z"] is False for _, kwargs in calls)
 
@@ -132,13 +168,21 @@ def test_los_stream_nonuniform_z_roi():
     z = -(np.arange(n, dtype=np.float32) ** 1.3)[::-1].copy()
     dd = ArrayData(base.arrays, axis, axis, z)
     zz = dd.get_z()
-    sl = {"x": slice(3, 13), "y": slice(2, 15),
-          "z": slice(float(zz[3]), float(zz[15]))}
+    sl = {"x": slice(3, 13), "y": slice(2, 15), "z": slice(float(zz[3]), float(zz[15]))}
     for los in "xyz":
-        full, _ = _integrated_plane(dd, "r", 0, los=los, selection=sl,
-                                    units="solar", low_memory=True)
-        streamed, _ = _integrated_plane(dd, "r", 0, los=los, selection=sl,
-                                        units="solar", low_memory=True, stream=True)
+        full, _ = _integrated_plane(
+            dd, "r", 0, los=los, selection=sl, units="solar", low_memory=True
+        )
+        streamed, _ = _integrated_plane(
+            dd,
+            "r",
+            0,
+            los=los,
+            selection=sl,
+            units="solar",
+            low_memory=True,
+            stream=True,
+        )
         np.testing.assert_allclose(streamed, full, rtol=1e-6)
 
 
@@ -156,33 +200,69 @@ def test_movies_with_real_reader_and_overlay_or_stream(tmp_path, mode):
         return arr
 
     dd.get_var = track
-    options = dict(dpi=60, figsize=(3, 2), cbar=False, progress=False,
-                   output=tmp_path / f"{mode}.mp4")
+    options = dict(
+        dpi=60,
+        figsize=(3, 2),
+        cbar=False,
+        progress=False,
+        output=tmp_path / f"{mode}.mp4",
+    )
     if mode == "temporal":
-        result = movie(dd, "r", [0, 2, 4], y=7.0,
-                       contours={"var": "bx", "centered": True,
-                                 "levels": [0.05, 0.1], "colors": "white"},
-                       **options)
+        result = movie(
+            dd,
+            "r",
+            [0, 2, 4],
+            y=7.0,
+            contours={
+                "var": "bx",
+                "centered": True,
+                "levels": [0.05, 0.1],
+                "colors": "white",
+            },
+            **options,
+        )
         assert len([c for c in calls if c[0] == "r"]) == 3
         assert len([c for c in calls if c[0] == "bx"]) == 3
         assert all(c[2].get("centered") is True for c in calls if c[0] == "bx")
     elif mode == "spatial":
         zz = dd.get_z()
-        result = movie(dd, "r", 0, scan="z", z=slice(float(zz[3]), float(zz[13])),
-                       every=4, contours={"var": "bx", "centered": True,
-                                          "levels": [0.05, 0.1]}, **options)
-        assert len([c for c in calls if c[0] == "bx"]) == len([c for c in calls if c[0] == "r"])
+        result = movie(
+            dd,
+            "r",
+            0,
+            scan="z",
+            z=slice(float(zz[3]), float(zz[13])),
+            every=4,
+            contours={"var": "bx", "centered": True, "levels": [0.05, 0.1]},
+            **options,
+        )
+        assert len([c for c in calls if c[0] == "bx"]) == len(
+            [c for c in calls if c[0] == "r"]
+        )
         assert all(c[3] == 2 for c in calls)
     else:
         result = movie(dd, "r", [0, 2, 4], los="z", **options)
         assert len(calls) == 3  # one slab per frame: 18 planes < _LOS_SLAB
     assert result.exists() and result.stat().st_size > 500
     if shutil.which("ffprobe"):
-        frames = int(subprocess.check_output([
-            "ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0",
-            "-show_entries", "stream=nb_read_frames", "-of", "default=nokey=1:noprint_wrappers=1",
-            str(result),
-        ], text=True).strip())
+        frames = int(
+            subprocess.check_output(
+                [
+                    "ffprobe",
+                    "-v",
+                    "error",
+                    "-count_frames",
+                    "-select_streams",
+                    "v:0",
+                    "-show_entries",
+                    "stream=nb_read_frames",
+                    "-of",
+                    "default=nokey=1:noprint_wrappers=1",
+                    str(result),
+                ],
+                text=True,
+            ).strip()
+        )
         assert frames == (3 if mode in ("temporal", "los") else 3)
 
 

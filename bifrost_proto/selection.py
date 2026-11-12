@@ -42,7 +42,9 @@ class Selection:
             stop = n if s.stop is None else int(s.stop)
             step = 1 if s.step is None else s.step
             if step != 1:
-                raise ValueError("Internal Selection objects must be contiguous (step=1)")
+                raise ValueError(
+                    "Internal Selection objects must be contiguous (step=1)"
+                )
             out.append(slice(start, stop, 1))
         return Selection(*out)
 
@@ -101,7 +103,7 @@ class AxisPlan:
 
     pstart: int
     pstop: int
-    action: str = "keep"       # keep, indices, scalar, linear
+    action: str = "keep"  # keep, indices, scalar, linear
     indices: tuple[int, ...] | None = None
     weight: float | None = None
     target: float | None = None
@@ -121,7 +123,7 @@ class SamplingPlan:
         arr = value
         names = ["x", "y", "z"]
         coords = {
-            axis: np.asarray(c[p.pstart:p.pstop])
+            axis: np.asarray(c[p.pstart : p.pstop])
             for axis, c, p in zip(AXES, self.physical_coords, self.axes)
         }
 

@@ -14,6 +14,7 @@ Examples
 python benchmarks/benchmark_instrument_response.py numpy --n 256 --order F
 python benchmarks/benchmark_instrument_response.py numba --n 256 --order F
 """
+
 from __future__ import annotations
 
 import argparse
@@ -46,7 +47,7 @@ def make_response(root: Path):
     logt = np.linspace(4.0, 8.0, 161, dtype=np.float64)
     logne = np.linspace(7.0, 13.0, 121, dtype=np.float64)
     # Smooth strictly positive synthetic table; only interpolation performance matters.
-    table = np.exp(-((logt[None, :] - 6.2) / 0.45) ** 2) * (
+    table = np.exp(-(((logt[None, :] - 6.2) / 0.45) ** 2)) * (
         1.0 + 0.05 * (logne[:, None] - 10.0)
     )
     np.save(folder / "table.npy", table)
@@ -97,8 +98,8 @@ def main():
         print(
             f"mode={args.mode} n={args.n} order={args.order} "
             f"elapsed_s={elapsed:.6f} baseline_mib={baseline:.1f} "
-            f"peak_mib={peak:.1f} delta_peak_mib={peak-baseline:.1f} "
-            f"checksum={float(out[0,0,0]):.8g}"
+            f"peak_mib={peak:.1f} delta_peak_mib={peak - baseline:.1f} "
+            f"checksum={float(out[0, 0, 0]):.8g}"
         )
 
 

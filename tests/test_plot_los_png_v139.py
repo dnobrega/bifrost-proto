@@ -20,12 +20,23 @@ def _data(n=16):
     return dd
 
 
-@pytest.mark.parametrize("los,expected_shape", [
-    ("x", (16, 16)), ("y", (16, 16)), ("z", (16, 16)),
-])
-@pytest.mark.parametrize("units,expected", [
-    ("solar", 320.0), ("cgs", 320.0), ("si", 3200.0), ("bifrost", 32.0),
-])
+@pytest.mark.parametrize(
+    "los,expected_shape",
+    [
+        ("x", (16, 16)),
+        ("y", (16, 16)),
+        ("z", (16, 16)),
+    ],
+)
+@pytest.mark.parametrize(
+    "units,expected",
+    [
+        ("solar", 320.0),
+        ("cgs", 320.0),
+        ("si", 3200.0),
+        ("bifrost", 32.0),
+    ],
+)
 def test_center_constant_density_column_all_axes(los, expected_shape, units, expected):
     """Center-cell widths cover the full 16-cell domain in each direction."""
     dd = _data()
@@ -72,7 +83,9 @@ def test_staggered_integral_uses_periodic_rectangle_on_xy_and_trapezoid_on_z():
             weights = getattr(dd, f"get_d{los}1d")() * 1e8
             expected = np.einsum(
                 "ijk,i->jk" if los == "x" else "ijk,j->ik",
-                plane, weights, dtype=np.float64,
+                plane,
+                weights,
+                dtype=np.float64,
             )
         else:
             expected = trapz(plane, x=positions, axis=axis)
@@ -86,9 +99,11 @@ def test_staggered_integral_uses_periodic_rectangle_on_xy_and_trapezoid_on_z():
 def test_los_roi_and_vertical_remesh_take_place_after_integral():
     dd = _data(24)
     x, y, z = dd.get_grid()
-    selection = {"x": slice(float(x[4]), float(x[17])),
-                 "y": slice(float(y[2]), float(y[10])),
-                 "z": slice(float(z[3]), float(z[18]))}
+    selection = {
+        "x": slice(float(x[4]), float(x[17])),
+        "y": slice(float(y[2]), float(y[10])),
+        "z": slice(float(z[3]), float(z[18])),
+    }
     fig, ax, im = dd.plot("r", 0, los="y", **selection, cbar=False)
     try:
         raw = dd.get_var("r", 0, **selection, units="solar", uniform_z=False)
@@ -102,10 +117,12 @@ def test_los_roi_and_vertical_remesh_take_place_after_integral():
 
 def test_unit_simplification_and_registered_names():
     dd = _data()
-    for mode, expected in [("solar", "g cm$^{-2}$"),
-                           ("cgs", "g cm$^{-2}$"),
-                           ("si", "kg m$^{-2}$"),
-                           ("bifrost", "bifrost Mm")]:
+    for mode, expected in [
+        ("solar", "g cm$^{-2}$"),
+        ("cgs", "g cm$^{-2}$"),
+        ("si", "kg m$^{-2}$"),
+        ("bifrost", "bifrost Mm"),
+    ]:
         label = _colorbar_label(dd, "r", mode, los="y")
         assert r"\int \rho\,\mathrm{d}y" in label
         assert expected in label
@@ -118,7 +135,9 @@ def test_unit_simplification_and_registered_names():
 def test_solar_Mm_inverse_conversion_is_numerically_consistent():
     dd = _data()
 
-    @dd.register_variable("test_gradient", location="center", unit_type="magnetic_gradient")
+    @dd.register_variable(
+        "test_gradient", location="center", unit_type="magnetic_gradient"
+    )
     def test_gradient(data, snap, selection, context):
         return data._getvar("r", snap, selection, context)
 
@@ -148,20 +167,32 @@ def test_png_auto_path_dpi_and_overwrite_protection(tmp_path, monkeypatch):
     dd = _data(12)
     dd.fdir = str(tmp_path / "simulation")
     monkeypatch.chdir(tmp_path)
-    fig, ax, im = dd.plot("r", 0, los="y", x=slice(2, 8), png=True,
-                          cbar=False, figsize=(2, 2))
+    fig, ax, im = dd.plot(
+        "r", 0, los="y", x=slice(2, 8), png=True, cbar=False, figsize=(2, 2)
+    )
     try:
-        pngs = list((tmp_path / "simulation" / "plots").glob("r_0000_XZ_los=y_x=2.00-8.00.png"))
+        pngs = list(
+            (tmp_path / "simulation" / "plots").glob("r_0000_XZ_los=y_x=2.00-8.00.png")
+        )
         assert len(pngs) == 1
         assert pngs[0].stat().st_size > 200
     finally:
         plt.close(fig)
     with pytest.raises(FileExistsError, match="PNG already exists"):
-        fig, _, _ = dd.plot("r", 0, los="y", x=slice(2, 8), png=True, cbar=False,
-                            figsize=(2, 2))
+        fig, _, _ = dd.plot(
+            "r", 0, los="y", x=slice(2, 8), png=True, cbar=False, figsize=(2, 2)
+        )
         plt.close(fig)
-    fig, _, _ = dd.plot("r", 0, los="y", x=slice(2, 8), png=True,
-                        overwrite=True, cbar=False, figsize=(2, 2))
+    fig, _, _ = dd.plot(
+        "r",
+        0,
+        los="y",
+        x=slice(2, 8),
+        png=True,
+        overwrite=True,
+        cbar=False,
+        figsize=(2, 2),
+    )
     plt.close(fig)
 
 
@@ -169,12 +200,25 @@ def test_png_custom_filename_and_regular_plot(tmp_path, monkeypatch):
     dd = _data(12)
     dd.fdir = str(tmp_path / "simulation")
     monkeypatch.chdir(tmp_path)
-    fig, _, _ = dd.plot("r", 0, y=float(dd.get_y()[5]), png="custom.png",
-                        cbar=False, figsize=(2, 2), dpi=150)
+    fig, _, _ = dd.plot(
+        "r",
+        0,
+        y=float(dd.get_y()[5]),
+        png="custom.png",
+        cbar=False,
+        figsize=(2, 2),
+        dpi=150,
+    )
     plt.close(fig)
     assert (tmp_path / "simulation" / "plots" / "custom.png").is_file()
-    fig, _, _ = dd.plot("r", 0, y=float(dd.get_y()[5]), png="output/custom.png",
-                        cbar=False, figsize=(2, 2))
+    fig, _, _ = dd.plot(
+        "r",
+        0,
+        y=float(dd.get_y()[5]),
+        png="output/custom.png",
+        cbar=False,
+        figsize=(2, 2),
+    )
     plt.close(fig)
     assert (tmp_path / "simulation" / "output" / "custom.png").is_file()
     with pytest.raises(ValueError, match=".png"):
@@ -188,8 +232,9 @@ def test_png_default_dpi_and_auto_name_for_single_cut(tmp_path, monkeypatch):
     dd = _data(12)
     dd.fdir = str(tmp_path / "simulation")
     monkeypatch.chdir(tmp_path)
-    fig, _, _ = dd.plot("r", 0, y=float(dd.get_y()[5]), png=True,
-                        cbar=False, figsize=(2, 2))
+    fig, _, _ = dd.plot(
+        "r", 0, y=float(dd.get_y()[5]), png=True, cbar=False, figsize=(2, 2)
+    )
     plt.close(fig)
     filename = next((tmp_path / "simulation" / "plots").glob("r_0000_XZ_y=*.png"))
     with Image.open(filename) as image:

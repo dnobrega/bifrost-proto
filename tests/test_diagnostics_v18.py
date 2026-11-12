@@ -67,7 +67,9 @@ def test_velocity_perpendicular_canonical_name_is_uperpb_only():
 def test_total_electric_field_parallel_perpendicular_decomposition():
     dd = constant_data(b=(1.0, 0.0, 0.0), efield=(2.0, 3.0, 4.0))
 
-    assert np.allclose(interior(dd.get_var("mode", 0, units="bifrost", br=True)), np.sqrt(29.0))
+    assert np.allclose(
+        interior(dd.get_var("mode", 0, units="bifrost", br=True)), np.sqrt(29.0)
+    )
     assert np.allclose(interior(dd.get_var("eparb", 0, units="bifrost", br=True)), 2.0)
 
     expected_par = (2.0, 0.0, 0.0)
@@ -79,7 +81,9 @@ def test_total_electric_field_parallel_perpendicular_decomposition():
         got = dd.get_var(f"eperpb_{axis}", 0, units="bifrost", br=True)
         assert np.allclose(interior(got), expected, atol=3e-5)
 
-    assert np.allclose(interior(dd.get_var("eperpb", 0, units="bifrost", br=True)), 5.0, atol=3e-5)
+    assert np.allclose(
+        interior(dd.get_var("eperpb", 0, units="bifrost", br=True)), 5.0, atol=3e-5
+    )
 
 
 def test_theta_jb_is_acute_angle_and_uses_degrees_in_solar_units():
@@ -141,10 +145,26 @@ def test_pressure_gradient_and_over_r_on_linear_pressure():
     assert np.allclose(interior(grad_z_phys), 4.0, atol=3e-5)
     assert np.allclose(interior(acc_z_phys), 2.0, atol=3e-5)
 
-    assert np.allclose(interior(dd.get_var("gradpg_h", 0, units="bifrost", br=True)), np.sqrt(13.0), atol=5e-5)
-    assert np.allclose(interior(dd.get_var("modgradpg", 0, units="bifrost", br=True)), np.sqrt(29.0), atol=5e-5)
-    assert np.allclose(interior(dd.get_var("gradpgor_h", 0, units="bifrost", br=True)), np.sqrt(13.0) / 2.0, atol=5e-5)
-    assert np.allclose(interior(dd.get_var("modgradpgor", 0, units="bifrost", br=True)), np.sqrt(29.0) / 2.0, atol=5e-5)
+    assert np.allclose(
+        interior(dd.get_var("gradpg_h", 0, units="bifrost", br=True)),
+        np.sqrt(13.0),
+        atol=5e-5,
+    )
+    assert np.allclose(
+        interior(dd.get_var("modgradpg", 0, units="bifrost", br=True)),
+        np.sqrt(29.0),
+        atol=5e-5,
+    )
+    assert np.allclose(
+        interior(dd.get_var("gradpgor_h", 0, units="bifrost", br=True)),
+        np.sqrt(13.0) / 2.0,
+        atol=5e-5,
+    )
+    assert np.allclose(
+        interior(dd.get_var("modgradpgor", 0, units="bifrost", br=True)),
+        np.sqrt(29.0) / 2.0,
+        atol=5e-5,
+    )
 
 
 def test_lorentz_force_legacy_stagger_path_on_constant_j_and_b():
@@ -157,10 +177,26 @@ def test_lorentz_force_legacy_stagger_path_on_constant_j_and_b():
         assert np.allclose(interior(lf), target, atol=4e-5)
         assert np.allclose(interior(lfor), target / 2.0, atol=4e-5)
 
-    assert np.allclose(interior(dd.get_var("lf_h", 0, units="bifrost", br=True)), np.sqrt(45.0), atol=6e-5)
-    assert np.allclose(interior(dd.get_var("modlf", 0, units="bifrost", br=True)), np.sqrt(54.0), atol=6e-5)
-    assert np.allclose(interior(dd.get_var("lfor_h", 0, units="bifrost", br=True)), np.sqrt(45.0) / 2.0, atol=6e-5)
-    assert np.allclose(interior(dd.get_var("modlfor", 0, units="bifrost", br=True)), np.sqrt(54.0) / 2.0, atol=6e-5)
+    assert np.allclose(
+        interior(dd.get_var("lf_h", 0, units="bifrost", br=True)),
+        np.sqrt(45.0),
+        atol=6e-5,
+    )
+    assert np.allclose(
+        interior(dd.get_var("modlf", 0, units="bifrost", br=True)),
+        np.sqrt(54.0),
+        atol=6e-5,
+    )
+    assert np.allclose(
+        interior(dd.get_var("lfor_h", 0, units="bifrost", br=True)),
+        np.sqrt(45.0) / 2.0,
+        atol=6e-5,
+    )
+    assert np.allclose(
+        interior(dd.get_var("modlfor", 0, units="bifrost", br=True)),
+        np.sqrt(54.0) / 2.0,
+        atol=6e-5,
+    )
 
 
 def test_lorentz_subdomain_matches_full_domain_exactly():
@@ -171,9 +207,13 @@ def test_lorentz_subdomain_matches_full_domain_exactly():
 
     full = dd.get_var("lf_x", 0, units="bifrost", br=True)
     sub = dd.get_var(
-        "lf_x", 0,
-        ix=slice(8, 18), iy=slice(9, 19), iz=slice(7, 17),
-        units="bifrost", br=True,
+        "lf_x",
+        0,
+        ix=slice(8, 18),
+        iy=slice(9, 19),
+        iz=slice(7, 17),
+        units="bifrost",
+        br=True,
     )
     assert np.array_equal(sub, full[8:18, 9:19, 7:17])
 

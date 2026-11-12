@@ -31,8 +31,13 @@ def _run(tmp_path, nsnap=3, missing_snap=None):
         )
         if k == missing_snap:
             continue
-        data = np.memmap(tmp_path / f"demo_{k:03d}.snap", dtype="<f4", mode="w+",
-                         shape=(n, n, n, 8), order="F")
+        data = np.memmap(
+            tmp_path / f"demo_{k:03d}.snap",
+            dtype="<f4",
+            mode="w+",
+            shape=(n, n, n, 8),
+            order="F",
+        )
         data[..., 0] = 1.0 + k
         data.flush()
         del data
@@ -45,7 +50,9 @@ def test_incomplete_snapshot_fails_before_encoding(tmp_path):
     assert dd.snaps == [0, 1]  # dd.snaps requires .idl and .snap
     with pytest.raises(FileNotFoundError, match=r"2: .*demo_002\.snap"):
         dd.movie("r", [0, 1, 2], y=1.0, progress=False)
-    assert not (tmp_path / "movies").exists() or not any((tmp_path / "movies").iterdir())
+    assert not (tmp_path / "movies").exists() or not any(
+        (tmp_path / "movies").iterdir()
+    )
     with pytest.raises(FileNotFoundError, match="demo_002.snap"):
         dd.get_var("r", 2)
 
@@ -84,7 +91,9 @@ def test_streamed_los_matches_full_cube_on_slabs(tmp_path, monkeypatch):
             fig, _, full = dd.plot("r", 1, los=los, cbar=False, **sel)
             expected = full.get_array().copy()
             plt.close(fig)
-            fig, _, streamed = dd.plot("r", 1, los=los, los_stream=True, cbar=False, **sel)
+            fig, _, streamed = dd.plot(
+                "r", 1, los=los, los_stream=True, cbar=False, **sel
+            )
             np.testing.assert_array_equal(streamed.get_array(), expected)
             plt.close(fig)
 

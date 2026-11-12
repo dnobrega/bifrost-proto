@@ -51,43 +51,66 @@ def _physical_cut(*, x: Any, y: Any, z: Any) -> tuple[str, float, str]:
     return axis, coordinate, plane
 
 
-def _output_path(data: Any, var: str, seq: np.ndarray, step: int,
-                 axis: str, coordinate: float, plane: str, output: Any,
-                 output_dir: Any, selections: dict[str, Any] | None = None,
-                 los: str | None = None) -> Path:
+def _output_path(
+    data: Any,
+    var: str,
+    seq: np.ndarray,
+    step: int,
+    axis: str,
+    coordinate: float,
+    plane: str,
+    output: Any,
+    output_dir: Any,
+    selections: dict[str, Any] | None = None,
+    los: str | None = None,
+) -> Path:
     """Resolve a movie path under the simulation, including ROI if requested."""
     run_dir = Path(data.fdir).expanduser().resolve()
-    directory = (run_dir / "movies" if output_dir is None
-                 else Path(output_dir).expanduser())
+    directory = (
+        run_dir / "movies" if output_dir is None else Path(output_dir).expanduser()
+    )
     if not directory.is_absolute():
         directory = run_dir / directory
     if output is None:
-        mode = (f"los={los}" if los is not None
-                else f"{axis}={_coordinate_label(coordinate)}")
-        name = (f"{var}_{int(seq[0]):04d}_{int(seq[-1]):04d}_{step:04d}_"
-                f"{plane}_{mode}{_roi_suffix(axis if los is None else '', selections)}.mp4")
+        mode = (
+            f"los={los}"
+            if los is not None
+            else f"{axis}={_coordinate_label(coordinate)}"
+        )
+        name = (
+            f"{var}_{int(seq[0]):04d}_{int(seq[-1]):04d}_{step:04d}_"
+            f"{plane}_{mode}{_roi_suffix(axis if los is None else '', selections)}.mp4"
+        )
         destination = directory / name
     else:
         candidate = Path(output).expanduser()
         destination = (
-            candidate if candidate.is_absolute()
-            else (run_dir / candidate if output_dir is None and candidate.parent != Path(".")
-                  else directory / candidate)
+            candidate
+            if candidate.is_absolute()
+            else (
+                run_dir / candidate
+                if output_dir is None and candidate.parent != Path(".")
+                else directory / candidate
+            )
         )
     if destination.suffix.lower() != ".mp4":
         raise ValueError("output must be an .mp4 filename")
     return destination.resolve()
 
 
-def _scan_positions(data: Any, var: str, snap: int, scan: str,
-                    selections: dict[str, Any], every: int) -> np.ndarray:
+def _scan_positions(
+    data: Any, var: str, snap: int, scan: str, selections: dict[str, Any], every: int
+) -> np.ndarray:
     """Select original stagger-aware spatial samples, with no interpolation."""
     from .plotting import _validate_physical_selector
 
     if scan not in ("x", "y", "z"):
         raise ValueError("scan must be 'x', 'y', or 'z'")
-    if (not isinstance(every, (int, np.integer))
-            or isinstance(every, (bool, np.bool_)) or every < 1):
+    if (
+        not isinstance(every, (int, np.integer))
+        or isinstance(every, (bool, np.bool_))
+        or every < 1
+    ):
         raise ValueError("every must be a positive integer")
     for axis, selector in selections.items():
         if _validate_physical_selector(axis, selector):
@@ -99,8 +122,11 @@ def _scan_positions(data: Any, var: str, snap: int, scan: str,
     # The selected coordinate array belongs to the registered quantity,
     # including face/edge staggering and the original nonuniform Z mesh.
     coords = data.get_grid(
-        location=data.get_location(var), units="solar", br=False,
-        uniform_z=False, **selections,
+        location=data.get_location(var),
+        units="solar",
+        br=False,
+        uniform_z=False,
+        **selections,
     )
     positions = np.asarray(coords["xyz".index(scan)], dtype=np.float64)[::every]
     if positions.ndim != 1 or positions.size == 0 or not np.all(np.isfinite(positions)):
@@ -108,27 +134,42 @@ def _scan_positions(data: Any, var: str, snap: int, scan: str,
     return positions
 
 
-def _scan_output_path(data: Any, var: str, snap: int, scan: str,
-                      positions: np.ndarray, every: int,
-                      output: Any, output_dir: Any,
-                      selections: dict[str, Any]) -> Path:
+def _scan_output_path(
+    data: Any,
+    var: str,
+    snap: int,
+    scan: str,
+    positions: np.ndarray,
+    every: int,
+    output: Any,
+    output_dir: Any,
+    selections: dict[str, Any],
+) -> Path:
     """Resolve a scan MP4 path with its actual first/last coordinates."""
     run_dir = Path(data.fdir).expanduser().resolve()
-    directory = run_dir / "movies" if output_dir is None else Path(output_dir).expanduser()
+    directory = (
+        run_dir / "movies" if output_dir is None else Path(output_dir).expanduser()
+    )
     if not directory.is_absolute():
         directory = run_dir / directory
     plane = {"x": "YZ", "y": "XZ", "z": "XY"}[scan]
     if output is None:
-        name = (f"{var}_{int(snap):04d}_{plane}_scan-{scan}="
-                f"{_coordinate_label(positions[0])}-{_coordinate_label(positions[-1])}"
-                f"_every={every:04d}{_roi_suffix(scan, selections)}.mp4")
+        name = (
+            f"{var}_{int(snap):04d}_{plane}_scan-{scan}="
+            f"{_coordinate_label(positions[0])}-{_coordinate_label(positions[-1])}"
+            f"_every={every:04d}{_roi_suffix(scan, selections)}.mp4"
+        )
         destination = directory / name
     else:
         candidate = Path(output).expanduser()
         destination = (
-            candidate if candidate.is_absolute()
-            else (run_dir / candidate if output_dir is None and candidate.parent != Path(".")
-                  else directory / candidate)
+            candidate
+            if candidate.is_absolute()
+            else (
+                run_dir / candidate
+                if output_dir is None and candidate.parent != Path(".")
+                else directory / candidate
+            )
         )
     if destination.suffix.lower() != ".mp4":
         raise ValueError("output must be an .mp4 filename")
@@ -157,7 +198,11 @@ def _check_snapshot_files(data: Any, seq: np.ndarray) -> None:
         params = read_idl_ascii(str(idl))
         shape = (int(params["mx"]), int(params["my"]), int(params["mz"]))
         mhd = data._as_bool(params.get("do_mhd", True))
-        expected = int(np.prod(shape, dtype=np.int64)) * (8 if mhd else 5) * np.dtype(data.dtype).itemsize
+        expected = (
+            int(np.prod(shape, dtype=np.int64))
+            * (8 if mhd else 5)
+            * np.dtype(data.dtype).itemsize
+        )
         actual = binary.stat().st_size
         if actual < expected:
             incomplete.append((snap, str(binary), actual, expected))
@@ -165,7 +210,7 @@ def _check_snapshot_files(data: Any, seq: np.ndarray) -> None:
         preview = ", ".join(f"{snap}: {path}" for snap, path in missing[:8])
         raise FileNotFoundError(
             f"Missing .idl/.snap snapshot files: {preview}"
-            + (f" (and {len(missing)-8} more)" if len(missing) > 8 else "")
+            + (f" (and {len(missing) - 8} more)" if len(missing) > 8 else "")
         )
     if incomplete:
         preview = ", ".join(
@@ -184,18 +229,32 @@ def _figure_and_image(plot_result: Any):
         ax = getattr(plot_result, "ax", None)
         im = getattr(plot_result, "im", None)
     if fig is None or ax is None or not isinstance(im, AxesImage):
-        raise TypeError("movie currently requires dd.plot() to return a scalar AxesImage cut")
+        raise TypeError(
+            "movie currently requires dd.plot() to return a scalar AxesImage cut"
+        )
     return fig, ax, im
 
 
-def _frame_data(data: Any, var: str, snap: int, axis: str,
-                selections: dict[str, Any], units: str,
-                low_memory: bool | None) -> np.ndarray:
+def _frame_data(
+    data: Any,
+    var: str,
+    snap: int,
+    axis: str,
+    selections: dict[str, Any],
+    units: str,
+    low_memory: bool | None,
+) -> np.ndarray:
     """Load one selected plane with the exact geometry and transpose of dd.plot."""
-    plane = np.squeeze(data.get_var(
-        var, int(snap), **selections, uniform_z=(axis != "z"),
-        units=units, low_memory=low_memory,
-    ))
+    plane = np.squeeze(
+        data.get_var(
+            var,
+            int(snap),
+            **selections,
+            uniform_z=(axis != "z"),
+            units=units,
+            low_memory=low_memory,
+        )
+    )
     if np.ndim(plane) != 2:
         raise ValueError(f"Expected a 2-D cut; got shape {np.shape(plane)}")
     return plane.T
@@ -223,16 +282,43 @@ def _remove_contour(contour_set: Any) -> None:
             item.remove()
 
 
-def _pipe_command(path: Path, width: int, height: int, *, fps: float,
-                  overwrite: bool, crf: int, preset: str) -> list[str]:
+def _pipe_command(
+    path: Path,
+    width: int,
+    height: int,
+    *,
+    fps: float,
+    overwrite: bool,
+    crf: int,
+    preset: str,
+) -> list[str]:
     """Build an FFmpeg command accepting raw RGBA frames on stdin."""
     return [
-        "ffmpeg", "-y" if overwrite else "-n", "-loglevel", "error",
-        "-f", "rawvideo", "-pixel_format", "rgba",
-        "-video_size", f"{width}x{height}", "-framerate", str(fps),
-        "-i", "pipe:0", "-c:v", "libx264", "-preset", preset,
-        "-crf", str(crf), "-pix_fmt", "yuv420p",
-        "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", str(path),
+        "ffmpeg",
+        "-y" if overwrite else "-n",
+        "-loglevel",
+        "error",
+        "-f",
+        "rawvideo",
+        "-pixel_format",
+        "rgba",
+        "-video_size",
+        f"{width}x{height}",
+        "-framerate",
+        str(fps),
+        "-i",
+        "pipe:0",
+        "-c:v",
+        "libx264",
+        "-preset",
+        preset,
+        "-crf",
+        str(crf),
+        "-pix_fmt",
+        "yuv420p",
+        "-vf",
+        "pad=ceil(iw/2)*2:ceil(ih/2)*2",
+        str(path),
     ]
 
 
@@ -303,7 +389,10 @@ def _publish_movie(source: Path, destination: Path, *, overwrite: bool) -> None:
     except OSError as exc:
         _LOG.warning(
             "Published %s, but could not remove the temporary %s: %s",
-            destination, source, exc, stacklevel=3,
+            destination,
+            source,
+            exc,
+            stacklevel=3,
         )
 
 
@@ -367,13 +456,18 @@ def movie(
             raise ValueError("scan and los are incompatible movie modes")
         if contours is not None:
             raise ValueError("contours are not supported with LOS integration")
-    if contours is not None and (not isinstance(contours, dict)
-                                 or not isinstance(contours.get("var"), str)
-                                 or not contours["var"]):
+    if contours is not None and (
+        not isinstance(contours, dict)
+        or not isinstance(contours.get("var"), str)
+        or not contours["var"]
+    ):
         raise TypeError("contours must contain a nonempty 'var' name")
     if spatial:
-        if (not isinstance(snapshots, (int, np.integer))
-                or isinstance(snapshots, (bool, np.bool_)) or snapshots < 0):
+        if (
+            not isinstance(snapshots, (int, np.integer))
+            or isinstance(snapshots, (bool, np.bool_))
+            or snapshots < 0
+        ):
             raise ValueError("Spatial scans require one nonnegative integer snapshot")
         snap = int(snapshots)
         positions = _scan_positions(data, var, snap, scan, selections, every)
@@ -389,6 +483,7 @@ def movie(
             axis, coordinate, plane = _physical_cut(**selections)
         else:
             from .plotting import _validate_los_selection
+
             _validate_los_selection(selections)
             axis, coordinate = los, None
             plane = {"x": "YZ", "y": "XZ", "z": "XY"}[los]
@@ -401,21 +496,53 @@ def movie(
         raise ValueError("dpi must be a positive integer")
     if not isinstance(crf, (int, np.integer)) or not 0 <= crf <= 51:
         raise ValueError("crf must be an integer between 0 and 51")
-    if preset not in {"ultrafast", "superfast", "veryfast", "faster", "fast",
-                      "medium", "slow", "slower", "veryslow"}:
+    if preset not in {
+        "ultrafast",
+        "superfast",
+        "veryfast",
+        "faster",
+        "fast",
+        "medium",
+        "slow",
+        "slower",
+        "veryslow",
+    }:
         raise ValueError("Unsupported H.264 encoding preset")
     if shutil.which("ffmpeg") is None:
-        raise RuntimeError("ffmpeg not found on PATH; install FFmpeg to create MP4 movies")
+        raise RuntimeError(
+            "ffmpeg not found on PATH; install FFmpeg to create MP4 movies"
+        )
 
     if spatial:
         destination = _scan_output_path(
-            data, var, snap, scan, positions, every, output, output_dir, selections,
+            data,
+            var,
+            snap,
+            scan,
+            positions,
+            every,
+            output,
+            output_dir,
+            selections,
         )
     else:
-        destination = _output_path(data, var, seq, step, axis, coordinate, plane,
-                                   output, output_dir, selections, los=los)
+        destination = _output_path(
+            data,
+            var,
+            seq,
+            step,
+            axis,
+            coordinate,
+            plane,
+            output,
+            output_dir,
+            selections,
+            los=los,
+        )
     if destination.exists() and not overwrite:
-        raise FileExistsError(f"Movie already exists: {destination} (set overwrite=True)")
+        raise FileExistsError(
+            f"Movie already exists: {destination} (set overwrite=True)"
+        )
     _check_snapshot_files(data, [snap] if spatial else seq)
     destination.parent.mkdir(parents=True, exist_ok=True)
     # A unique same-directory temporary protects independent encoders and
@@ -436,17 +563,26 @@ def movie(
         if spatial:
             first_selections[scan] = coordinate
         initial_kwargs = {
-            "cmap": cmap, "norm": norm, "aspect": aspect, "cbar": cbar,
-            "cbar_position": cbar_position, "figsize": figsize, "title": title,
-            "minor_ticks": minor_ticks, "units": units, "low_memory": low_memory,
+            "cmap": cmap,
+            "norm": norm,
+            "aspect": aspect,
+            "cbar": cbar,
+            "cbar_position": cbar_position,
+            "figsize": figsize,
+            "title": title,
+            "minor_ticks": minor_ticks,
+            "units": units,
+            "low_memory": low_memory,
         }
         if los is not None:
             initial_kwargs.update(los=los, los_stream=True)
         if contours is not None:
             initial_kwargs["contours"] = contours
         result = data.plot(
-            var, snap if spatial else int(seq[0]),
-            **first_selections, **initial_kwargs,
+            var,
+            snap if spatial else int(seq[0]),
+            **first_selections,
+            **initial_kwargs,
         )
         fig, ax, artist = _figure_and_image(result)
         fig.set_dpi(int(dpi))
@@ -468,12 +604,16 @@ def movie(
             if spatial:
                 left_title = getattr(ax, "_left_title", None)
                 if left_title is None:
-                    raise RuntimeError("Unable to locate Matplotlib's left-hand plane title")
+                    raise RuntimeError(
+                        "Unable to locate Matplotlib's left-hand plane title"
+                    )
                 moving.append(left_title)
             else:
                 right_title = getattr(ax, "_right_title", None)
                 if right_title is None:
-                    raise RuntimeError("Unable to locate Matplotlib's right-hand time title")
+                    raise RuntimeError(
+                        "Unable to locate Matplotlib's right-hand time title"
+                    )
                 moving.append(right_title)
         for obj in moving:
             obj.set_animated(True)
@@ -482,8 +622,15 @@ def movie(
         width, height = fig.canvas.get_width_height()
 
         proc = subprocess.Popen(
-            _pipe_command(partial, width, height, fps=fps,
-                          overwrite=True, crf=int(crf), preset=preset),
+            _pipe_command(
+                partial,
+                width,
+                height,
+                fps=fps,
+                overwrite=True,
+                crf=int(crf),
+                preset=preset,
+            ),
             stdin=subprocess.PIPE,
         )
 
@@ -491,6 +638,7 @@ def movie(
         if progress:
             try:
                 from tqdm.auto import tqdm
+
                 iterable = tqdm(frames, desc=f"movie {var}")
             except ImportError:
                 pass
@@ -502,14 +650,24 @@ def movie(
                     frame_selections[scan] = float(frame)
                 if los is None:
                     image = _frame_data(
-                        data, var, snap if spatial else int(frame),
-                        axis, frame_selections, units, low_memory,
+                        data,
+                        var,
+                        snap if spatial else int(frame),
+                        axis,
+                        frame_selections,
+                        units,
+                        low_memory,
                     )
                 else:
                     los_plane, _ = _integrated_plane(
-                        data, var, int(frame), los=los,
-                        selection=frame_selections, units=units,
-                        low_memory=low_memory, stream=True,
+                        data,
+                        var,
+                        int(frame),
+                        los=los,
+                        selection=frame_selections,
+                        units=units,
+                        low_memory=low_memory,
+                        stream=True,
                     )
                     image = los_plane.T
                 if image.shape != initial_shape:
@@ -521,11 +679,16 @@ def movie(
                 if contours is not None:
                     _remove_contour(contour_artist)
                     contour_artist = _plot_contours(
-                        ax, data, contours,
+                        ax,
+                        data,
+                        contours,
                         snap=snap if spatial else int(frame),
-                        background_var=var, selection=frame_selections,
-                        cut_axis=axis, uniform_z=(axis != "z"),
-                        units=units, low_memory=low_memory,
+                        background_var=var,
+                        selection=frame_selections,
+                        cut_axis=axis,
+                        uniform_z=(axis != "z"),
+                        units=units,
+                        low_memory=low_memory,
                     )
                     for overlay_item in _contour_artists(contour_artist):
                         overlay_item.set_animated(True)
@@ -533,7 +696,9 @@ def movie(
             if left_title is not None:
                 left_title.set_text(f"{scan.upper()}={float(frame):.2f} Mm")
             if right_title is not None and frame_idx:
-                right_title.set_text(f"t={_snapshot_time_min(data, int(frame)):.2f} min")
+                right_title.set_text(
+                    f"t={_snapshot_time_min(data, int(frame)):.2f} min"
+                )
             fig.canvas.restore_region(background)
             ax.draw_artist(artist)
             for overlay_item in _contour_artists(contour_artist):
@@ -548,12 +713,16 @@ def movie(
             buffer = memoryview(fig.canvas.buffer_rgba()).cast("B")
             sent = proc.stdin.write(buffer)
             if sent != len(buffer):
-                raise OSError(f"Incomplete FFmpeg pipe write ({sent}/{len(buffer)} bytes)")
+                raise OSError(
+                    f"Incomplete FFmpeg pipe write ({sent}/{len(buffer)} bytes)"
+                )
         proc.stdin.close()
         exit_status = proc.wait()
         proc = None
         if exit_status != 0:
-            raise RuntimeError(f"FFmpeg returned exit code {exit_status}; see its error output")
+            raise RuntimeError(
+                f"FFmpeg returned exit code {exit_status}; see its error output"
+            )
         try:
             _publish_movie(partial, destination, overwrite=overwrite)
         except FileExistsError:

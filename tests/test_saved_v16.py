@@ -49,7 +49,10 @@ def make_run(tmp_path, n=12):
     ]
     mm = np.memmap(
         tmp_path / f"{root}.snap",
-        dtype="<f4", mode="w+", order="F", shape=shape + (8,),
+        dtype="<f4",
+        mode="w+",
+        order="F",
+        shape=shape + (8,),
     )
     for i, field in enumerate(fields):
         mm[..., i] = field
@@ -61,7 +64,10 @@ def make_run(tmp_path, n=12):
 def rewrite_b(tmp_path, root, shape, bx, by, bz):
     mm = np.memmap(
         tmp_path / f"{root}.snap",
-        dtype="<f4", mode="r+", order="F", shape=shape + (8,),
+        dtype="<f4",
+        mode="r+",
+        order="F",
+        shape=shape + (8,),
     )
     mm[..., 5] = bx
     mm[..., 6] = by
@@ -106,9 +112,13 @@ def test_saved_npy_debug_path_and_memmap(tmp_path):
     # pytest's warnings summary or suppressing real user-facing warnings.
     with pytest.warns(UserWarning, match="Source files changed"):
         sub = dd.get_var(
-            "modb", 0,
-            ix=slice(2, 9), iy=slice(1, 8), iz=slice(3, 10),
-            units="bifrost", br=True,
+            "modb",
+            0,
+            ix=slice(2, 9),
+            iy=slice(1, 8),
+            iz=slice(3, 10),
+            units="bifrost",
+            br=True,
         )
     np.testing.assert_array_equal(sub, from_saved[2:9, 1:8, 3:10])
 

@@ -86,8 +86,7 @@ def _uniform_z_3d_c(value, lo, hi, w, out):
         for j in range(n1):
             for k in range(nz):
                 wk = w[k]
-                out[i, j, k] = ((1.0 - wk) * value[i, j, lo[k]]
-                                + wk * value[i, j, hi[k]])
+                out[i, j, k] = (1.0 - wk) * value[i, j, lo[k]] + wk * value[i, j, hi[k]]
 
 
 @njit(cache=True, parallel=True)
@@ -98,8 +97,7 @@ def _uniform_z_3d_f(value, lo, hi, w, out):
         wk = w[k]
         for j in range(n1):
             for i in range(n0):
-                out[i, j, k] = ((1.0 - wk) * value[i, j, lo[k]]
-                                + wk * value[i, j, hi[k]])
+                out[i, j, k] = (1.0 - wk) * value[i, j, lo[k]] + wk * value[i, j, hi[k]]
 
 
 @njit(cache=True, parallel=True)
@@ -132,8 +130,6 @@ class UnknownVariableError(ValueError):
 
 class StaleSavedVariableError(ValueError):
     """Persistent derived data are outdated and should be recomputed."""
-
-
 
 
 @dataclass
@@ -235,7 +231,9 @@ class BifrostData:
     ):
         """Initialize a run reader without loading snapshot arrays eagerly."""
         if folder is not None:
-            if os.fspath(fdir) != "." and os.path.abspath(fdir) != os.path.abspath(folder):
+            if os.fspath(fdir) != "." and os.path.abspath(fdir) != os.path.abspath(
+                folder
+            ):
                 raise ValueError("folder and fdir must refer to the same directory")
             fdir = folder
 
@@ -292,12 +290,15 @@ class BifrostData:
             snap = int(match.group(1))
             # Match exactly the metadata path accepted by get_var(); a
             # root_0002.idl file alone is not a readable root_002.idl.
-            if (name == os.path.basename(self._param_filename(snap))
-                    and os.path.isfile(os.path.join(self.fdir, name))
-                    and os.path.isfile(self._data_filename(snap, "snap"))):
+            if (
+                name == os.path.basename(self._param_filename(snap))
+                and os.path.isfile(os.path.join(self.fdir, name))
+                and os.path.isfile(self._data_filename(snap, "snap"))
+            ):
                 found.add(snap)
-        if (os.path.isfile(os.path.join(self.fdir, self.root_name + ".idl"))
-                and os.path.isfile(self._data_filename(0, "snap"))):
+        if os.path.isfile(
+            os.path.join(self.fdir, self.root_name + ".idl")
+        ) and os.path.isfile(self._data_filename(0, "snap")):
             found.add(0)
         return sorted(found)
 
@@ -305,8 +306,15 @@ class BifrostData:
     # Public registration API
     # ------------------------------------------------------------------
     def register_variable(
-        self, name, *, location=None, unit_type=None, component=None,
-        storage_name=None, description=None, aliases=(),
+        self,
+        name,
+        *,
+        location=None,
+        unit_type=None,
+        component=None,
+        storage_name=None,
+        description=None,
+        aliases=(),
     ):
         """Register a session-local scalar quantity and optionally its getter.
 
@@ -333,8 +341,15 @@ class BifrostData:
         return decorator
 
     def register_vector(
-        self, names, *, locations, unit_type, storage_names=None, aliases=None,
-        description=None, descriptions=None,
+        self,
+        names,
+        *,
+        locations,
+        unit_type,
+        storage_names=None,
+        aliases=None,
+        description=None,
+        descriptions=None,
     ):
         """Register three session-local vector components with shared metadata."""
         if isinstance(names, str):
@@ -354,9 +369,14 @@ class BifrostData:
                     f"{component.upper()} component of {base[0].lower() + base[1:]}."
                     for component in "xyz"
                 )
-        for name, location, component, storage_name, component_aliases, component_description in zip(
-            names, locations, "xyz", storage_names, aliases, descriptions
-        ):
+        for (
+            name,
+            location,
+            component,
+            storage_name,
+            component_aliases,
+            component_description,
+        ) in zip(names, locations, "xyz", storage_names, aliases, descriptions):
             if isinstance(component_aliases, str):
                 component_aliases = (component_aliases,)
             self.registry.register(
@@ -376,8 +396,15 @@ class BifrostData:
     def _tabparam_filename(self, snap=None):
         """Resolve the run tabparam.in path associated with a snapshot/grid."""
         meta = self._grid_meta() if snap is None else self._meta(int(snap))
-        tabparam = str(meta.params.get("tabinputfile", "tabparam.in")).strip().strip("'\"").strip()
-        return tabparam if os.path.isabs(tabparam) else os.path.join(self.fdir, tabparam)
+        tabparam = (
+            str(meta.params.get("tabinputfile", "tabparam.in"))
+            .strip()
+            .strip("'\"")
+            .strip()
+        )
+        return (
+            tabparam if os.path.isabs(tabparam) else os.path.join(self.fdir, tabparam)
+        )
 
     def _composition(self, snap=None):
         """Parse and cache elemental composition metadata from tabparam.in."""
@@ -554,7 +581,9 @@ class BifrostData:
             Requested scalar/subdomain/cube in the finalized public convention.
         """
         if not isinstance(snap, (int, np.integer)):
-            raise TypeError("get_var() intentionally accepts one integer snapshot per call")
+            raise TypeError(
+                "get_var() intentionally accepts one integer snapshot per call"
+            )
         snap = int(snap)
 
         if centered is None and center is None:
@@ -586,7 +615,9 @@ class BifrostData:
                 )
 
         output_location = "center" if centered else (spec.location if spec else None)
-        selectors_present = any(v is not None for v in (x, y, z, ix, iy, iz, ix_br, iy_br, iz_br))
+        selectors_present = any(
+            v is not None for v in (x, y, z, ix, iy, iz, ix_br, iy_br, iz_br)
+        )
         if selectors_present and output_location is None:
             raise ValueError(
                 f"Cannot apply coordinate/index selection to {var!r}: mesh location is unknown"
@@ -596,9 +627,15 @@ class BifrostData:
         plan = self._build_sampling_plan(
             meta,
             location=output_location or "center",
-            x=x, y=y, z=z,
-            ix=ix, iy=iy, iz=iz,
-            ix_br=ix_br, iy_br=iy_br, iz_br=iz_br,
+            x=x,
+            y=y,
+            z=z,
+            ix=ix,
+            iy=iy,
+            iz=iz,
+            ix_br=ix_br,
+            iy_br=iy_br,
+            iz_br=iz_br,
             method=method,
             br=br,
         )
@@ -611,7 +648,11 @@ class BifrostData:
             else:
                 context = EvaluationContext(cache={}, use_saved=bool(use_saved))
         else:
-            weak = getattr(self, "low_memory", False) if low_memory is None else bool(low_memory)
+            weak = (
+                getattr(self, "low_memory", False)
+                if low_memory is None
+                else bool(low_memory)
+            )
             context = EvaluationContext(
                 cache=weakref.WeakValueDictionary() if weak else {},
                 use_saved=bool(use_saved),
@@ -742,7 +783,6 @@ class BifrostData:
 
         return _movie(self, var, snapshots, **kwargs)
 
-
     # ------------------------------------------------------------------
     # Public mesh API
     # ------------------------------------------------------------------
@@ -760,7 +800,9 @@ class BifrostData:
             self._stagger_interface = interface
         return interface
 
-    def get_x(self, *, x=None, ix=None, ix_br=None, method="nearest", units="solar", br=False):
+    def get_x(
+        self, *, x=None, ix=None, ix_br=None, method="nearest", units="solar", br=False
+    ):
         """Return cell-center X coordinates, optionally applying an X selection.
 
         Physical ``x=`` selectors are always expressed in solar Mm, matching
@@ -768,18 +810,34 @@ class BifrostData:
         ``ix_br`` addresses native Bifrost indices.
         """
         return self._get_axis_coord(
-            "x", location="center", coord_sel=x, index_sel=ix,
-            br_index_sel=ix_br, method=method, br=br, units=units,
+            "x",
+            location="center",
+            coord_sel=x,
+            index_sel=ix,
+            br_index_sel=ix_br,
+            method=method,
+            br=br,
+            units=units,
         )
 
-    def get_xf(self, *, x=None, ix=None, ix_br=None, method="nearest", units="solar", br=False):
+    def get_xf(
+        self, *, x=None, ix=None, ix_br=None, method="nearest", units="solar", br=False
+    ):
         """Return X-face coordinates, optionally applying an X selection."""
         return self._get_axis_coord(
-            "x", location="xface", coord_sel=x, index_sel=ix,
-            br_index_sel=ix_br, method=method, br=br, units=units,
+            "x",
+            location="xface",
+            coord_sel=x,
+            index_sel=ix,
+            br_index_sel=ix_br,
+            method=method,
+            br=br,
+            units=units,
         )
 
-    def get_y(self, *, y=None, iy=None, iy_br=None, method="nearest", units="solar", br=False):
+    def get_y(
+        self, *, y=None, iy=None, iy_br=None, method="nearest", units="solar", br=False
+    ):
         """Return cell-center Y coordinates, optionally applying a Y selection.
 
         Physical ``y=`` selectors are always expressed in solar Mm, matching
@@ -787,20 +845,41 @@ class BifrostData:
         ``iy_br`` addresses native Bifrost indices.
         """
         return self._get_axis_coord(
-            "y", location="center", coord_sel=y, index_sel=iy,
-            br_index_sel=iy_br, method=method, br=br, units=units,
+            "y",
+            location="center",
+            coord_sel=y,
+            index_sel=iy,
+            br_index_sel=iy_br,
+            method=method,
+            br=br,
+            units=units,
         )
 
-    def get_yf(self, *, y=None, iy=None, iy_br=None, method="nearest", units="solar", br=False):
+    def get_yf(
+        self, *, y=None, iy=None, iy_br=None, method="nearest", units="solar", br=False
+    ):
         """Return Y-face coordinates, optionally applying a Y selection."""
         return self._get_axis_coord(
-            "y", location="yface", coord_sel=y, index_sel=iy,
-            br_index_sel=iy_br, method=method, br=br, units=units,
+            "y",
+            location="yface",
+            coord_sel=y,
+            index_sel=iy,
+            br_index_sel=iy_br,
+            method=method,
+            br=br,
+            units=units,
         )
 
     def get_z(
-        self, *, z=None, iz=None, iz_br=None, method="nearest",
-        units="solar", br=False, uniform_z=False,
+        self,
+        *,
+        z=None,
+        iz=None,
+        iz_br=None,
+        method="nearest",
+        units="solar",
+        br=False,
+        uniform_z=False,
     ):
         """Return cell-center Z coordinates, optionally applying a Z selection.
 
@@ -810,19 +889,38 @@ class BifrostData:
         ``get_var(..., uniform_z=True)``.
         """
         return self._get_axis_coord(
-            "z", location="center", coord_sel=z, index_sel=iz,
-            br_index_sel=iz_br, method=method, br=br, units=units,
+            "z",
+            location="center",
+            coord_sel=z,
+            index_sel=iz,
+            br_index_sel=iz_br,
+            method=method,
+            br=br,
+            units=units,
             uniform=bool(uniform_z),
         )
 
     def get_zf(
-        self, *, z=None, iz=None, iz_br=None, method="nearest",
-        units="solar", br=False, uniform_z=False,
+        self,
+        *,
+        z=None,
+        iz=None,
+        iz_br=None,
+        method="nearest",
+        units="solar",
+        br=False,
+        uniform_z=False,
     ):
         """Return Z-face coordinates, optionally applying a Z selection."""
         return self._get_axis_coord(
-            "z", location="zface", coord_sel=z, index_sel=iz,
-            br_index_sel=iz_br, method=method, br=br, units=units,
+            "z",
+            location="zface",
+            coord_sel=z,
+            index_sel=iz,
+            br_index_sel=iz_br,
+            method=method,
+            br=br,
+            units=units,
             uniform=bool(uniform_z),
         )
 
@@ -850,56 +948,134 @@ class BifrostData:
         tsnap = float(meta.params["tsnap"])
         return tsnap * meta.units.factor("time", units)
 
-    def get_dx1d(self, *, x=None, ix=None, ix_br=None, method="nearest", units="solar", br=False):
+    def get_dx1d(
+        self, *, x=None, ix=None, ix_br=None, method="nearest", units="solar", br=False
+    ):
         """Return center-grid local X spacing, optionally applying an X selection."""
         return self._get_axis_spacing(
-            "x", coord_sel=x, index_sel=ix, br_index_sel=ix_br,
-            method=method, br=br, units=units,
+            "x",
+            coord_sel=x,
+            index_sel=ix,
+            br_index_sel=ix_br,
+            method=method,
+            br=br,
+            units=units,
         )
 
-    def get_dy1d(self, *, y=None, iy=None, iy_br=None, method="nearest", units="solar", br=False):
+    def get_dy1d(
+        self, *, y=None, iy=None, iy_br=None, method="nearest", units="solar", br=False
+    ):
         """Return center-grid local Y spacing, optionally applying a Y selection."""
         return self._get_axis_spacing(
-            "y", coord_sel=y, index_sel=iy, br_index_sel=iy_br,
-            method=method, br=br, units=units,
+            "y",
+            coord_sel=y,
+            index_sel=iy,
+            br_index_sel=iy_br,
+            method=method,
+            br=br,
+            units=units,
         )
 
     def get_dz1d(
-        self, *, z=None, iz=None, iz_br=None, method="nearest",
-        units="solar", br=False, uniform_z=False,
+        self,
+        *,
+        z=None,
+        iz=None,
+        iz_br=None,
+        method="nearest",
+        units="solar",
+        br=False,
+        uniform_z=False,
     ):
         """Return center-grid local Z spacing, optionally applying a Z selection."""
         return self._get_axis_spacing(
-            "z", coord_sel=z, index_sel=iz, br_index_sel=iz_br,
-            method=method, br=br, units=units, uniform=bool(uniform_z),
+            "z",
+            coord_sel=z,
+            index_sel=iz,
+            br_index_sel=iz_br,
+            method=method,
+            br=br,
+            units=units,
+            uniform=bool(uniform_z),
         )
 
-    def get_dx(self, *, x=None, ix=None, ix_br=None, method="nearest", units="solar", br=False):
+    def get_dx(
+        self, *, x=None, ix=None, ix_br=None, method="nearest", units="solar", br=False
+    ):
         """Return mean center-grid X spacing over the requested X selection."""
-        return float(np.mean(self.get_dx1d(
-            x=x, ix=ix, ix_br=ix_br, method=method, units=units, br=br,
-        )))
+        return float(
+            np.mean(
+                self.get_dx1d(
+                    x=x,
+                    ix=ix,
+                    ix_br=ix_br,
+                    method=method,
+                    units=units,
+                    br=br,
+                )
+            )
+        )
 
-    def get_dy(self, *, y=None, iy=None, iy_br=None, method="nearest", units="solar", br=False):
+    def get_dy(
+        self, *, y=None, iy=None, iy_br=None, method="nearest", units="solar", br=False
+    ):
         """Return mean center-grid Y spacing over the requested Y selection."""
-        return float(np.mean(self.get_dy1d(
-            y=y, iy=iy, iy_br=iy_br, method=method, units=units, br=br,
-        )))
+        return float(
+            np.mean(
+                self.get_dy1d(
+                    y=y,
+                    iy=iy,
+                    iy_br=iy_br,
+                    method=method,
+                    units=units,
+                    br=br,
+                )
+            )
+        )
 
     def get_dz(
-        self, *, z=None, iz=None, iz_br=None, method="nearest",
-        units="solar", br=False, uniform_z=False,
+        self,
+        *,
+        z=None,
+        iz=None,
+        iz_br=None,
+        method="nearest",
+        units="solar",
+        br=False,
+        uniform_z=False,
     ):
         """Return mean center-grid Z spacing over the requested Z selection."""
-        return float(np.mean(self.get_dz1d(
-            z=z, iz=iz, iz_br=iz_br, method=method, units=units, br=br,
-            uniform_z=uniform_z,
-        )))
+        return float(
+            np.mean(
+                self.get_dz1d(
+                    z=z,
+                    iz=iz,
+                    iz_br=iz_br,
+                    method=method,
+                    units=units,
+                    br=br,
+                    uniform_z=uniform_z,
+                )
+            )
+        )
 
     def get_grid(
-        self, *, location="center", x=None, y=None, z=None,
-        ix=None, iy=None, iz=None, ix_br=None, iy_br=None, iz_br=None,
-        method="nearest", uniform_z=False, units="solar", br=False,
+        self,
+        *,
+        location="center",
+        x=None,
+        y=None,
+        z=None,
+        ix=None,
+        iy=None,
+        iz=None,
+        ix_br=None,
+        iy_br=None,
+        iz_br=None,
+        method="nearest",
+        uniform_z=False,
+        units="solar",
+        br=False,
     ):
         """Return selected ``(x, y, z)`` coordinates for one mesh location.
 
@@ -914,15 +1090,20 @@ class BifrostData:
         plan = self._build_sampling_plan(
             meta,
             location=location,
-            x=x, y=y, z=z,
-            ix=ix, iy=iy, iz=iz,
-            ix_br=ix_br, iy_br=iy_br, iz_br=iz_br,
+            x=x,
+            y=y,
+            z=z,
+            ix=ix,
+            iy=iy,
+            iz=iz,
+            ix_br=ix_br,
+            iy_br=iy_br,
+            iz_br=iz_br,
             method=method,
             br=br,
         )
-        factor = (
-            meta.units.factor("length", units)
-            / meta.units.factor("length", "solar")
+        factor = meta.units.factor("length", units) / meta.units.factor(
+            "length", "solar"
         )
         out = []
         for axis, coord, axis_plan in zip("xyz", plan.physical_coords, plan.axes):
@@ -1016,10 +1197,13 @@ class BifrostData:
         for name in names:
             spec = self.registry[name]
             aliases = [
-                alias for alias, target in self.registry.aliases.items()
+                alias
+                for alias, target in self.registry.aliases.items()
                 if self.registry.resolve(target) == name
             ]
-            if query == name.lower() or any(query == alias.lower() for alias in aliases):
+            if query == name.lower() or any(
+                query == alias.lower() for alias in aliases
+            ):
                 exact.append(name)
             searchable.append((name, spec, aliases))
 
@@ -1054,7 +1238,8 @@ class BifrostData:
             raise UnknownVariableError(f"Variable {var!r} is not registered")
 
         aliases = sorted(
-            alias for alias, target in self.registry.aliases.items()
+            alias
+            for alias, target in self.registry.aliases.items()
             if self.registry.resolve(target) == canonical
         )
         result = {
@@ -1063,16 +1248,22 @@ class BifrostData:
             "description": spec.description,
             "location": spec.location,
             "unit_type": spec.unit_type,
-            "units": (self.get_units(canonical, units=units, latex=latex)
-                      if spec.unit_type is not None else None),
+            "units": (
+                self.get_units(canonical, units=units, latex=latex)
+                if spec.unit_type is not None
+                else None
+            ),
         }
 
         response_complete = None
         if canonical in INSTRUMENT_RESPONSE_NAMES:
-            base_dir = getattr(self, "responses_dir", os.fspath(default_responses_dir()))
+            base_dir = getattr(
+                self, "responses_dir", os.fspath(default_responses_dir())
+            )
             files = response_files(base_dir, canonical)
             response_complete = all(
-                path.is_file() for path in (files.table, files.logt, files.logne, files.metadata)
+                path.is_file()
+                for path in (files.table, files.logt, files.logne, files.metadata)
             )
             result["response_table_available"] = response_complete
             if response_complete:
@@ -1094,7 +1285,11 @@ class BifrostData:
 
             if canonical in {"qrad", "qgenrad"}:
                 stored = stored and self._raw_source(raw.filename) == "aux"
-            saved = False if stored or canonical in {"qrad", "qgenrad"} else self.has_savedvar(canonical, snap)
+            saved = (
+                False
+                if stored or canonical in {"qrad", "qgenrad"}
+                else self.has_savedvar(canonical, snap)
+            )
             if stored:
                 source = self._raw_source(raw.filename)
             elif saved:
@@ -1111,7 +1306,11 @@ class BifrostData:
                 source = "unavailable"
 
             available = stored or saved or spec.getter is not None
-            if canonical in INSTRUMENT_RESPONSE_NAMES and response_complete is False and not (stored or saved):
+            if (
+                canonical in INSTRUMENT_RESPONSE_NAMES
+                and response_complete is False
+                and not (stored or saved)
+            ):
                 available = False
             result.update(snapshot=snap, available=available, source=source)
 
@@ -1148,7 +1347,8 @@ class BifrostData:
             warnings.warn(
                 f"The existing Bifrost file {filename!r} will be REPLACED. "
                 "A new IDL parameter file/run root is recommended.",
-                UserWarning, stacklevel=2,
+                UserWarning,
+                stacklevel=2,
             )
         parent = os.path.dirname(filename)
         os.makedirs(parent, exist_ok=True)
@@ -1163,8 +1363,12 @@ class BifrostData:
                 fp.truncate(total_nbytes)
             for index, (_name, value) in enumerate(arrays):
                 mm = np.memmap(
-                    temporary, dtype=dtype, mode="r+", order="F",
-                    offset=index * block_nbytes, shape=shape,
+                    temporary,
+                    dtype=dtype,
+                    mode="r+",
+                    order="F",
+                    offset=index * block_nbytes,
+                    shape=shape,
                 )
                 mm[...] = np.asarray(value)
                 mm.flush()
@@ -1188,9 +1392,7 @@ class BifrostData:
                 os.unlink(temporary)
         return filename
 
-    def write_snap(
-        self, filename, r, px, py, pz, e, bx, by, bz, *, overwrite=False
-    ):
+    def write_snap(self, filename, r, px, py, pz, e, bx, by, bz, *, overwrite=False):
         """Write a native Bifrost MHD snapshot binary file.
 
         The eight input arrays must cover the full run grid and already be in
@@ -1200,8 +1402,14 @@ class BifrostData:
         conversion is performed.
         """
         arrays = (
-            ("r", r), ("px", px), ("py", py), ("pz", pz),
-            ("e", e), ("bx", bx), ("by", by), ("bz", bz),
+            ("r", r),
+            ("px", px),
+            ("py", py),
+            ("pz", pz),
+            ("e", e),
+            ("bx", bx),
+            ("by", by),
+            ("bz", bz),
         )
         return self._write_native_blocks(filename, arrays, overwrite=overwrite)
 
@@ -1220,7 +1428,9 @@ class BifrostData:
         seen = {"p", "tg"}
         for item in extras:
             if not isinstance(item, (tuple, list)) or len(item) != 2:
-                raise TypeError("extra must be an ordered iterable of (name, array) pairs")
+                raise TypeError(
+                    "extra must be an ordered iterable of (name, array) pairs"
+                )
             name, value = item
             name = str(name)
             if name in seen:
@@ -1328,7 +1538,7 @@ class BifrostData:
     def _apply_axis_plan_1d(values, plan):
         """Apply one :class:`AxisPlan` to a 1-D coordinate-like array."""
         values = np.asarray(values, dtype=np.float64)
-        local = values[plan.pstart:plan.pstop]
+        local = values[plan.pstart : plan.pstop]
 
         if plan.action == "keep":
             return local
@@ -1350,14 +1560,27 @@ class BifrostData:
         return out
 
     def _axis_sampling_plan(
-        self, axis, *, location, coord_sel, index_sel, br_index_sel,
-        method, br,
+        self,
+        axis,
+        *,
+        location,
+        coord_sel,
+        index_sel,
+        br_index_sel,
+        method,
+        br,
     ):
         """Build a normal get_var-style sampling plan for one public mesh axis."""
         kwargs = {
-            "x": None, "y": None, "z": None,
-            "ix": None, "iy": None, "iz": None,
-            "ix_br": None, "iy_br": None, "iz_br": None,
+            "x": None,
+            "y": None,
+            "z": None,
+            "ix": None,
+            "iy": None,
+            "iz": None,
+            "ix_br": None,
+            "iy_br": None,
+            "iz_br": None,
         }
         kwargs[axis] = coord_sel
         kwargs[f"i{axis}"] = index_sel
@@ -1398,18 +1621,15 @@ class BifrostData:
             br=br,
         )
         iaxis = "xyz".index(axis)
-        value = self._apply_axis_plan_1d(
-            plan.physical_coords[iaxis], plan.axes[iaxis]
-        )
+        value = self._apply_axis_plan_1d(plan.physical_coords[iaxis], plan.axes[iaxis])
         if uniform and np.ndim(value) == 1 and value.size > 1:
             value = np.linspace(value[0], value[-1], value.size, dtype=np.float64)
 
         # Sampling coordinates are always represented internally here in solar
         # Mm so that x=/y=/z= selectors have exactly the same semantics as
         # get_var(), irrespective of the requested output unit system.
-        factor = (
-            meta.units.factor("length", units)
-            / meta.units.factor("length", "solar")
+        factor = meta.units.factor("length", units) / meta.units.factor(
+            "length", "solar"
         )
         return self._scale_coordinate_output(value, factor)
 
@@ -1448,14 +1668,15 @@ class BifrostData:
             selected_coord = self._apply_axis_plan_1d(coord, plan.axes[iaxis])
             if np.ndim(selected_coord) == 1 and selected_coord.size > 1:
                 uniform_coord = np.linspace(
-                    selected_coord[0], selected_coord[-1], selected_coord.size,
+                    selected_coord[0],
+                    selected_coord[-1],
+                    selected_coord.size,
                     dtype=np.float64,
                 )
                 spacing = np.gradient(uniform_coord)
 
-        factor = (
-            meta.units.factor("length", units)
-            / meta.units.factor("length", "solar")
+        factor = meta.units.factor("length", units) / meta.units.factor(
+            "length", "solar"
         )
         return self._scale_coordinate_output(spacing, factor)
 
@@ -1464,7 +1685,9 @@ class BifrostData:
         """Validate one of the seven supported Bifrost stagger locations."""
         if location not in LOCATION_SHIFTED_AXES:
             allowed = ", ".join(LOCATION_SHIFTED_AXES)
-            raise ValueError(f"Unknown location {location!r}. Expected one of: {allowed}")
+            raise ValueError(
+                f"Unknown location {location!r}. Expected one of: {allowed}"
+            )
 
     # ------------------------------------------------------------------
     # Derived-variable engine
@@ -1500,7 +1723,9 @@ class BifrostData:
             value = self._read_saved_variable(var, snap, selection)
         else:
             if spec is None or spec.getter is None:
-                filename = getattr(self._meta(snap).raw.get(storage_name), "filename", None)
+                filename = getattr(
+                    self._meta(snap).raw.get(storage_name), "filename", None
+                )
                 if filename is not None and not os.path.isfile(filename):
                     raise FileNotFoundError(
                         f"{var!r} for snapshot {snap} is stored in {filename}, "
@@ -1540,7 +1765,15 @@ class BifrostData:
         operations = tuple(operations)
         var1 = self.registry.resolve(var1)
         var2 = self.registry.resolve(var2)
-        key = ("ops_product", context.use_saved, operations, var1, var2, snap, selection.key)
+        key = (
+            "ops_product",
+            context.use_saved,
+            operations,
+            var1,
+            var2,
+            snap,
+            selection.key,
+        )
         cached = context.cache.get(key)
         if cached is not None:
             return cached
@@ -1563,24 +1796,34 @@ class BifrostData:
         )
 
         center, face = self._local_axis_geometry(meta, axis, expanded)
-        coeff = (self._cached_z_coefficients(meta, expanded, outer)
-                 if axis == 2 else None)
+        coeff = (
+            self._cached_z_coefficients(meta, expanded, outer) if axis == 2 else None
+        )
         if len(operations) == 1:
             # Last/innermost operator: compute product values only at stencil
             # taps. Exact grouped float32 stagger arithmetic, no product cube.
             a = self._getvar(var1, snap, expanded, context)
             b = self._getvar(var2, snap, expanded, context)
             value = apply_product_operator(
-                outer, a, b, center, face,
-                spacing=self._legacy_axis_spacing(meta, axis), precomputed=coeff,
+                outer,
+                a,
+                b,
+                center,
+                face,
+                spacing=self._legacy_axis_spacing(meta, axis),
+                precomputed=coeff,
             )
         else:
             inner = self._ops_product(
                 operations[:-1], var1, var2, snap, expanded, context
             )
             value = apply_operator(
-                outer, inner, center, face,
-                spacing=self._legacy_axis_spacing(meta, axis), precomputed=coeff,
+                outer,
+                inner,
+                center,
+                face,
+                spacing=self._legacy_axis_spacing(meta, axis),
+                precomputed=coeff,
             )
         value = value[selection.relative_to(expanded, meta.shape)]
         value = np.asfortranarray(value, dtype=np.float32)
@@ -1601,7 +1844,12 @@ class BifrostData:
         """
         operations = tuple(operations)
         key = (
-            "ops_expression", context.use_saved, tag, operations, snap, selection.key
+            "ops_expression",
+            context.use_saved,
+            tag,
+            operations,
+            snap,
+            selection.key,
         )
         cached = context.cache.get(key)
         if cached is not None:
@@ -1627,8 +1875,14 @@ class BifrostData:
         )
         if self._shared_context is None:
             # This intermediate is consumed by exactly one outer operator.
-            inner_key = ("ops_expression", context.use_saved, tag,
-                         operations[:-1], snap, expanded.key)
+            inner_key = (
+                "ops_expression",
+                context.use_saved,
+                tag,
+                operations[:-1],
+                snap,
+                expanded.key,
+            )
             context.cache.pop(inner_key, None)
         center, face = self._local_axis_geometry(meta, axis, expanded)
         value = apply_operator(
@@ -1637,8 +1891,11 @@ class BifrostData:
             center,
             face,
             spacing=self._legacy_axis_spacing(meta, axis),
-            precomputed=(self._cached_z_coefficients(meta, expanded, outer)
-                         if axis == 2 else None),
+            precomputed=(
+                self._cached_z_coefficients(meta, expanded, outer)
+                if axis == 2
+                else None
+            ),
         )
         value = value[selection.relative_to(expanded, meta.shape)]
         value = np.asfortranarray(value, dtype=np.float32)
@@ -1676,8 +1933,11 @@ class BifrostData:
             center,
             face,
             spacing=self._legacy_axis_spacing(meta, axis),
-            precomputed=(self._cached_z_coefficients(meta, expanded, outer)
-                         if axis == 2 else None),
+            precomputed=(
+                self._cached_z_coefficients(meta, expanded, outer)
+                if axis == 2
+                else None
+            ),
         )
         value = value[selection.relative_to(expanded, meta.shape)]
         value = np.asfortranarray(value, dtype=np.float32)
@@ -1761,15 +2021,20 @@ class BifrostData:
             snap=snap,
             params=params,
             shape=shape,
-            x=x, xdn=xdn,
-            y=y, ydn=ydn,
-            z=z, zdn=zdn,
+            x=x,
+            xdn=xdn,
+            y=y,
+            ydn=ydn,
+            z=z,
+            zdn=zdn,
             units=units,
             raw=raw,
             periodic=periodic,
         )
         for previous in self._meta_cache.values():
-            if np.array_equal(meta.z, previous.z) and np.array_equal(meta.zdn, previous.zdn):
+            if np.array_equal(meta.z, previous.z) and np.array_equal(
+                meta.zdn, previous.zdn
+            ):
                 meta.z_coefficients = previous.z_coefficients
                 break
         self._meta_cache[snap] = meta
@@ -1808,9 +2073,15 @@ class BifrostData:
         """Read center/face mesh coordinates or construct a uniform fallback mesh."""
         meshfile = str(params.get("meshfile", "")).strip().strip("'\"").strip()
         if "meshfile" in params and not meshfile:
-            raise ValueError("IDL declares an empty meshfile; a valid mesh path is required")
+            raise ValueError(
+                "IDL declares an empty meshfile; a valid mesh path is required"
+            )
         if meshfile:
-            meshfile = meshfile if os.path.isabs(meshfile) else os.path.join(self.fdir, meshfile)
+            meshfile = (
+                meshfile
+                if os.path.isabs(meshfile)
+                else os.path.join(self.fdir, meshfile)
+            )
 
         if meshfile and not os.path.isfile(meshfile):
             raise FileNotFoundError(
@@ -1965,27 +2236,49 @@ class BifrostData:
         """
         meta = self._meta(int(snap))
         paths = {os.path.abspath(self._param_filename(snap))}
-        paths.update(os.path.abspath(raw.filename) for raw in meta.raw.values()
-                     if os.path.isfile(raw.filename))
+        paths.update(
+            os.path.abspath(raw.filename)
+            for raw in meta.raw.values()
+            if os.path.isfile(raw.filename)
+        )
         meshfile = str(meta.params.get("meshfile", "")).strip().strip("'\"")
         if meshfile:
-            paths.add(os.path.abspath(meshfile if os.path.isabs(meshfile)
-                                      else os.path.join(self.fdir, meshfile)))
-        tabparam = str(meta.params.get("tabinputfile", "tabparam.in")).strip().strip("'\"")
-        tabpath = os.path.abspath(tabparam if os.path.isabs(tabparam)
-                                   else os.path.join(self.fdir, tabparam))
+            paths.add(
+                os.path.abspath(
+                    meshfile
+                    if os.path.isabs(meshfile)
+                    else os.path.join(self.fdir, meshfile)
+                )
+            )
+        tabparam = (
+            str(meta.params.get("tabinputfile", "tabparam.in")).strip().strip("'\"")
+        )
+        tabpath = os.path.abspath(
+            tabparam if os.path.isabs(tabparam) else os.path.join(self.fdir, tabparam)
+        )
         if os.path.isfile(tabpath):
             paths.add(tabpath)
             tabinfo = read_idl_ascii(tabpath)
             table = str(tabinfo.get("eostablefile", "")).strip().strip("'\"")
             if table:
-                paths.add(os.path.abspath(table if os.path.isabs(table)
-                                          else os.path.join(self.fdir, table)))
+                paths.add(
+                    os.path.abspath(
+                        table
+                        if os.path.isabs(table)
+                        else os.path.join(self.fdir, table)
+                    )
+                )
         if var in INSTRUMENT_RESPONSE_NAMES:
             response = response_files(self.responses_dir, var)
-            paths.update(os.fspath(p) for p in (
-                response.table, response.logt, response.logne, response.metadata
-            ))
+            paths.update(
+                os.fspath(p)
+                for p in (
+                    response.table,
+                    response.logt,
+                    response.logne,
+                    response.metadata,
+                )
+            )
         result = {}
         for path in sorted(paths):
             if os.path.isfile(path):
@@ -2014,13 +2307,20 @@ class BifrostData:
             )
         source = self._source_signature(snap, var)
         st_json, st_npy = os.stat(json_path), os.stat(npy_path)
-        key = (self.registry.resolve(var), snap, st_json.st_mtime_ns,
-               st_json.st_size, st_npy.st_mtime_ns, st_npy.st_size)
+        key = (
+            self.registry.resolve(var),
+            snap,
+            st_json.st_mtime_ns,
+            st_json.st_size,
+            st_npy.st_mtime_ns,
+            st_npy.st_size,
+        )
         if self._saved_validation_cache.get(key) == source:
             return True
         try:
-            self._validate_saved(var, snap, npy_path, json_path,
-                                 source_signature=source)
+            self._validate_saved(
+                var, snap, npy_path, json_path, source_signature=source
+            )
         except StaleSavedVariableError as exc:
             warnings.warn(str(exc) + "; recalculating", UserWarning, stacklevel=2)
             return False
@@ -2054,7 +2354,10 @@ class BifrostData:
             raise StaleSavedVariableError(
                 f"Old persistent cache format for {canonical!r}, snapshot {snap}"
             )
-        if metadata.get("package_version") != __version__ or metadata.get("recipe_version") != 1:
+        if (
+            metadata.get("package_version") != __version__
+            or metadata.get("recipe_version") != 1
+        ):
             raise StaleSavedVariableError(
                 f"Outdated calculation recipe for {canonical!r}, snapshot {snap}"
             )
@@ -2079,7 +2382,9 @@ class BifrostData:
         mm = np.load(npy_path, mmap_mode="r", allow_pickle=False)
         array_mismatches = []
         if list(mm.shape) != list(meta.shape):
-            array_mismatches.append(f"array shape: expected {meta.shape!r}, saved {mm.shape!r}")
+            array_mismatches.append(
+                f"array shape: expected {meta.shape!r}, saved {mm.shape!r}"
+            )
         if mm.dtype != np.dtype(np.float32):
             array_mismatches.append(f"array dtype: expected float32, saved {mm.dtype}")
         if not mm.flags.f_contiguous:
@@ -2129,7 +2434,10 @@ class BifrostData:
         npy_path, _ = self._saved_paths(var, snap)
         # _getvar only reaches this method after _saved_exists validated it.
         mm = np.load(npy_path, mmap_mode="r", allow_pickle=False)
-        value = np.asarray(self._slice_native_region(mm, selection, self._meta(snap).shape), dtype=np.float32)
+        value = np.asarray(
+            self._slice_native_region(mm, selection, self._meta(snap).shape),
+            dtype=np.float32,
+        )
         return np.asfortranarray(value)
 
     def _variable_exists(self, var, snap):
@@ -2143,7 +2451,13 @@ class BifrostData:
         raw = meta.raw[var]
         nx, ny, nz = meta.shape
         dsize = np.dtype(self.dtype).itemsize
-        offset = np.int64(nx) * np.int64(ny) * np.int64(nz) * np.int64(raw.index) * np.int64(dsize)
+        offset = (
+            np.int64(nx)
+            * np.int64(ny)
+            * np.int64(nz)
+            * np.int64(raw.index)
+            * np.int64(dsize)
+        )
         mm = np.memmap(
             raw.filename,
             dtype=self.dtype,
@@ -2152,7 +2466,10 @@ class BifrostData:
             offset=int(offset),
             shape=meta.shape,
         )
-        value = np.asarray(self._slice_native_region(mm, selection, self._meta(snap).shape), dtype=np.float32)
+        value = np.asarray(
+            self._slice_native_region(mm, selection, self._meta(snap).shape),
+            dtype=np.float32,
+        )
         if raw.transform == "exp":
             value = np.exp(value)
         return np.asfortranarray(value)
@@ -2163,8 +2480,15 @@ class BifrostData:
     def _eos(self, snap):
         """Load and cache the Bifrost rho-e EOS object for a snapshot."""
         meta = self._meta(snap)
-        tabparam = str(meta.params.get("tabinputfile", "tabparam.in")).strip().strip("'\"").strip()
-        tabparam = os.path.abspath(tabparam if os.path.isabs(tabparam) else os.path.join(self.fdir, tabparam))
+        tabparam = (
+            str(meta.params.get("tabinputfile", "tabparam.in"))
+            .strip()
+            .strip("'\"")
+            .strip()
+        )
+        tabparam = os.path.abspath(
+            tabparam if os.path.isabs(tabparam) else os.path.join(self.fdir, tabparam)
+        )
         if tabparam in self._eos_cache:
             return self._eos_cache[tabparam]
         eos = EOSTable(
@@ -2189,10 +2513,14 @@ class BifrostData:
         # at zero.  The same translation is applied to all stagger locations,
         # preserving their relative half-cell geometry.  Native ``br=True``
         # coordinates remain completely untouched.
-        y_center_phys = -np.asarray(meta.y, dtype=np.float64)[::-1] * meta.units.length_to_Mm
+        y_center_phys = (
+            -np.asarray(meta.y, dtype=np.float64)[::-1] * meta.units.length_to_Mm
+        )
         y_origin = y_center_phys[0]
 
-        for axis, center, face in zip("xyz", (meta.x, meta.y, meta.z), (meta.xdn, meta.ydn, meta.zdn)):
+        for axis, center, face in zip(
+            "xyz", (meta.x, meta.y, meta.z), (meta.xdn, meta.ydn, meta.zdn)
+        ):
             arr = face if axis in shifted else center
             arr = np.asarray(arr, dtype=np.float64)
             if physical:
@@ -2205,8 +2533,21 @@ class BifrostData:
         return tuple(coords)
 
     def _build_sampling_plan(
-        self, meta, *, location, x, y, z, ix, iy, iz,
-        ix_br, iy_br, iz_br, method, br=False,
+        self,
+        meta,
+        *,
+        location,
+        x,
+        y,
+        z,
+        ix,
+        iy,
+        iz,
+        ix_br,
+        iy_br,
+        iz_br,
+        method,
+        br=False,
     ):
         """Build a selection in native Bifrost index space.
 
@@ -2244,8 +2585,13 @@ class BifrostData:
         native_slices = []
 
         for axis, coord, center_coord, n, csel, isel, brsel in zip(
-            "xyz", output_coords, center_coords, shape,
-            (x, y, z), (ix, iy, iz), (ix_br, iy_br, iz_br),
+            "xyz",
+            output_coords,
+            center_coords,
+            shape,
+            (x, y, z),
+            (ix, iy, iz),
+            (ix_br, iy_br, iz_br),
         ):
             supplied = sum(v is not None for v in (csel, isel, brsel))
             if supplied > 1:
@@ -2259,7 +2605,13 @@ class BifrostData:
                 isel_eff, brsel_eff = isel, brsel
 
             plan = self._axis_plan(
-                axis, coord, n, csel, isel_eff, brsel_eff, method,
+                axis,
+                coord,
+                n,
+                csel,
+                isel_eff,
+                brsel_eff,
+                method,
                 center_bounds=(float(center_coord[0]), float(center_coord[-1])),
             )
             axis_plans.append(plan)
@@ -2281,11 +2633,15 @@ class BifrostData:
             output_coords,
         )
 
-    def _axis_plan(self, axis, coord, n, csel, isel, brsel, method, *, center_bounds=None):
+    def _axis_plan(
+        self, axis, coord, n, csel, isel, brsel, method, *, center_bounds=None
+    ):
         """Translate one physical/index selector into a native contiguous axis plan."""
         if brsel is not None:
             if not isinstance(brsel, (int, np.integer)):
-                raise NotImplementedError(f"i{axis}_br slices are deferred; integer indices work in v0")
+                raise NotImplementedError(
+                    f"i{axis}_br slices are deferred; integer indices work in v0"
+                )
             i_br = int(brsel)
             if i_br < 0:
                 i_br += n
@@ -2346,9 +2702,12 @@ class BifrostData:
             else:
                 allowed_lo = min(float(coord[0]), center_bounds[0])
                 allowed_hi = max(float(coord[-1]), center_bounds[1])
-            if (not np.isfinite(target)
-                    or (outside_samples and method != "nearest")
-                    or target < allowed_lo or target > allowed_hi):
+            if (
+                not np.isfinite(target)
+                or (outside_samples and method != "nearest")
+                or target < allowed_lo
+                or target > allowed_hi
+            ):
                 raise ValueError(
                     f"Physical {axis}={target} outside grid [{coord[0]}, {coord[-1]}] "
                     f"(nearest permitted within [{allowed_lo}, {allowed_hi}])"
@@ -2398,7 +2757,6 @@ class BifrostData:
         """
         negate = spec is not None and spec.component in {"y", "z"}
         return self._reverse_yz_f(value, negate=negate)
-
 
     @staticmethod
     def _legacy_axis_spacing(meta, axis):
@@ -2498,7 +2856,9 @@ class BifrostData:
         w = ((znew - z[lo]) / (z[hi] - z[lo])).astype(np.float64, copy=False)
 
         if axis != value.ndim - 1:
-            raise RuntimeError("Internal sampling invariant violated: Z must be the last surviving axis")
+            raise RuntimeError(
+                "Internal sampling invariant violated: Z must be the last surviving axis"
+            )
 
         out = np.empty_like(value)
         c_layout = bool(value.flags.c_contiguous and not value.flags.f_contiguous)

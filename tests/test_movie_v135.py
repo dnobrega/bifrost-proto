@@ -4,13 +4,20 @@ import shutil
 import subprocess
 
 import matplotlib
+
 matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from matplotlib.colors import LogNorm
 
-from bifrost_proto.movie import _coordinate_label, _output_path, _physical_cut, _snapshots_and_step, movie
+from bifrost_proto.movie import (
+    _coordinate_label,
+    _output_path,
+    _physical_cut,
+    _snapshots_and_step,
+    movie,
+)
 
 
 class FakeData:
@@ -18,10 +25,32 @@ class FakeData:
         self.fdir = str(folder)
         self.calls = []
 
-    def get_var(self, var, snap, *, x=None, y=None, z=None, uniform_z=False, units="solar", low_memory=None):
+    def get_var(
+        self,
+        var,
+        snap,
+        *,
+        x=None,
+        y=None,
+        z=None,
+        uniform_z=False,
+        units="solar",
+        low_memory=None,
+    ):
         cuts = [axis for axis, val in (("x", x), ("y", y), ("z", z)) if val is not None]
-        assert sum(not isinstance(val, slice) for _, val in (("x", x), ("y", y), ("z", z)) if val is not None) == 1
-        axis = next(a for a, v in (("x", x), ("y", y), ("z", z)) if v is not None and not isinstance(v, slice))
+        assert (
+            sum(
+                not isinstance(val, slice)
+                for _, val in (("x", x), ("y", y), ("z", z))
+                if val is not None
+            )
+            == 1
+        )
+        axis = next(
+            a
+            for a, v in (("x", x), ("y", y), ("z", z))
+            if v is not None and not isinstance(v, slice)
+        )
         self.calls.append(("get_var", int(snap), axis, uniform_z, units))
         if axis == "z":
             a = np.arange(42).reshape(7, 6) + 1.0
@@ -34,11 +63,35 @@ class FakeData:
         self.calls.append(("get_t", int(snap)))
         return 11.0 * snap
 
-    def plot(self, var, snap, *, x=None, y=None, z=None, cmap=None,
-             norm=None, aspect="equal", cbar=True, cbar_position="top",
-             figsize=None, title=True, minor_ticks=True, units="solar", low_memory=None):
-        plane = self.get_var(var, snap, x=x, y=y, z=z,
-                             uniform_z=(z is None), units=units, low_memory=low_memory)
+    def plot(
+        self,
+        var,
+        snap,
+        *,
+        x=None,
+        y=None,
+        z=None,
+        cmap=None,
+        norm=None,
+        aspect="equal",
+        cbar=True,
+        cbar_position="top",
+        figsize=None,
+        title=True,
+        minor_ticks=True,
+        units="solar",
+        low_memory=None,
+    ):
+        plane = self.get_var(
+            var,
+            snap,
+            x=x,
+            y=y,
+            z=z,
+            uniform_z=(z is None),
+            units=units,
+            low_memory=low_memory,
+        )
         self.calls.append(("plot", int(snap)))
         fig, ax = plt.subplots(figsize=figsize or (5, 3))
         im = ax.imshow(plane.T, origin="lower", cmap=cmap, norm=norm, aspect=aspect)
@@ -46,7 +99,7 @@ class FakeData:
         ax.set_ylabel("z (Mm)")
         if title:
             ax.set_title("Y=3.25 Mm", loc="left")
-            ax.set_title(f"t={self.get_t(snap)/60:.2f} min", loc="right")
+            ax.set_title(f"t={self.get_t(snap) / 60:.2f} min", loc="right")
         if cbar:
             fig.colorbar(im, ax=ax)
         return fig, ax, im
@@ -69,8 +122,14 @@ def test_cut_and_name(tmp_path):
     path = _output_path(data, "modb", seq, step, "y", 25.5, "XZ", None, None)
     assert path == tmp_path / "movies" / "modb_0000_0230_0002_XZ_y=25.50.mp4"
     explicit = tmp_path / "out.mp4"
-    assert _output_path(data, "modb", seq, step, "y", 1.0, "XZ", explicit, None) == explicit
-    assert _output_path(data, "modb", seq, step, "y", 1.0, "XZ", "v.mp4", "other") == tmp_path / "other" / "v.mp4"
+    assert (
+        _output_path(data, "modb", seq, step, "y", 1.0, "XZ", explicit, None)
+        == explicit
+    )
+    assert (
+        _output_path(data, "modb", seq, step, "y", 1.0, "XZ", "v.mp4", "other")
+        == tmp_path / "other" / "v.mp4"
+    )
 
 
 @pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg unavailable")
@@ -79,9 +138,16 @@ def test_mp4_real_frames_title_and_uniform_z(tmp_path, axis, coordinate):
     data = FakeData(tmp_path)
     filename = tmp_path / f"test_{axis}.mp4"
     result = movie(
-        data, "modb", np.arange(0, 6, 2),
-        **{axis: coordinate}, cmap="turbo", norm=LogNorm(vmin=1, vmax=100),
-        fps=12, dpi=100, output=filename, progress=False,
+        data,
+        "modb",
+        np.arange(0, 6, 2),
+        **{axis: coordinate},
+        cmap="turbo",
+        norm=LogNorm(vmin=1, vmax=100),
+        fps=12,
+        dpi=100,
+        output=filename,
+        progress=False,
     )
     assert result == filename
     assert filename.exists() and filename.stat().st_size > 300
@@ -92,13 +158,29 @@ def test_mp4_real_frames_title_and_uniform_z(tmp_path, axis, coordinate):
     assert time_reads == [0, 2, 4]
     # Check encoded frame count via ffprobe if available.
     if shutil.which("ffprobe"):
-        cmd = ["ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0",
-               "-show_entries", "stream=nb_read_frames", "-of", "default=nokey=1:noprint_wrappers=1",
-               str(filename)]
+        cmd = [
+            "ffprobe",
+            "-v",
+            "error",
+            "-count_frames",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=nb_read_frames",
+            "-of",
+            "default=nokey=1:noprint_wrappers=1",
+            str(filename),
+        ]
         assert int(subprocess.check_output(cmd, text=True).strip()) == 3
     with pytest.raises(FileExistsError):
-        movie(data, "modb", [0, 2, 4], **{axis: coordinate},
-              output=filename, progress=False)
+        movie(
+            data,
+            "modb",
+            [0, 2, 4],
+            **{axis: coordinate},
+            output=filename,
+            progress=False,
+        )
 
 
 def test_validation_before_creating_dirs(tmp_path):
@@ -127,8 +209,7 @@ def test_movie_roi_filename_and_validation(tmp_path):
     data = FakeData(tmp_path)
     seq, step = _snapshots_and_step([0, 2, 4])
     selections = {"x": slice(5.0, 20.0), "y": 25.5, "z": slice(0.0, 10.0)}
-    path = _output_path(data, "tg", seq, step, "y", 25.5, "XZ", None, None,
-                        selections)
+    path = _output_path(data, "tg", seq, step, "y", 25.5, "XZ", None, None, selections)
     assert path.name == "tg_0000_0004_0002_XZ_y=25.50_x=5.00-20.00_z=0.00-10.00.mp4"
     assert _physical_cut(**selections) == ("y", 25.5, "XZ")
     with pytest.raises(ValueError, match="slice.step"):
@@ -143,14 +224,23 @@ def test_movie_roi_passed_to_first_plot_and_frames(tmp_path):
     selected = []
 
     def spy(var, snap, **kwargs):
-        selected.append((snap, kwargs["x"], kwargs["y"], kwargs["z"],
-                         kwargs["low_memory"]))
+        selected.append(
+            (snap, kwargs["x"], kwargs["y"], kwargs["z"], kwargs["low_memory"])
+        )
         return original(var, snap, **kwargs)
 
     data.get_var = spy
     roi = {"x": slice(5, 20), "y": 25.5, "z": slice(0, 10)}
-    path = movie(data, "tg", np.arange(0, 6, 2), **roi, low_memory=True,
-                 output=tmp_path / "cropped.mp4", progress=False, cbar=False)
+    path = movie(
+        data,
+        "tg",
+        np.arange(0, 6, 2),
+        **roi,
+        low_memory=True,
+        output=tmp_path / "cropped.mp4",
+        progress=False,
+        cbar=False,
+    )
     assert path.exists()
     assert [s[0] for s in selected] == [0, 2, 4]
     assert all(s[1:] == (roi["x"], roi["y"], roi["z"], True) for s in selected)
@@ -171,16 +261,35 @@ def test_movie_roi_with_bifrost_data_reader(tmp_path):
         "z": slice(float(z[3]), float(z[15])),
     }
     target = tmp_path / "bifrost_real_roi.mp4"
-    result = movie(reader, "r", [0], **kwargs, output=target,
-                   dpi=72, fps=12, figsize=(4, 3), progress=False,
-                   low_memory=True)
+    result = movie(
+        reader,
+        "r",
+        [0],
+        **kwargs,
+        output=target,
+        dpi=72,
+        fps=12,
+        figsize=(4, 3),
+        progress=False,
+        low_memory=True,
+    )
     assert result == target
     assert target.stat().st_size > 400
     if shutil.which("ffprobe"):
-        result = subprocess.check_output([
-            "ffprobe", "-v", "error", "-count_frames",
-            "-select_streams", "v:0", "-show_entries",
-            "stream=nb_read_frames", "-of", "default=nokey=1:noprint_wrappers=1",
-            str(target),
-        ], text=True)
+        result = subprocess.check_output(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-count_frames",
+                "-select_streams",
+                "v:0",
+                "-show_entries",
+                "stream=nb_read_frames",
+                "-of",
+                "default=nokey=1:noprint_wrappers=1",
+                str(target),
+            ],
+            text=True,
+        )
         assert int(result.strip()) == 1

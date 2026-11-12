@@ -42,7 +42,10 @@ def test_snapshot_zero_prefers_numbered_000_files(tmp_path):
     shape = (n, n, n)
     fields = [np.full(shape, i + 1, dtype=np.float32, order="F") for i in range(8)]
     mm = np.memmap(
-        tmp_path / f"{root}_000.snap", dtype="<f4", mode="w+", order="F",
+        tmp_path / f"{root}_000.snap",
+        dtype="<f4",
+        mode="w+",
+        order="F",
         shape=shape + (8,),
     )
     for i, field in enumerate(fields):
@@ -73,7 +76,10 @@ def test_snapshot_zero_keeps_legacy_unnumbered_fallback(tmp_path):
     )
     shape = (n, n, n)
     mm = np.memmap(
-        tmp_path / f"{root}.snap", dtype="<f4", mode="w+", order="F",
+        tmp_path / f"{root}.snap",
+        dtype="<f4",
+        mode="w+",
+        order="F",
         shape=shape + (8,),
     )
     for i in range(8):
@@ -137,7 +143,8 @@ def test_native_write_snap_and_aux_roundtrip(tmp_path):
 
     fields = [
         np.asfortranarray(
-            (i + 1) + np.arange(np.prod(shape), dtype=np.float32).reshape(shape, order="F")
+            (i + 1)
+            + np.arange(np.prod(shape), dtype=np.float32).reshape(shape, order="F")
         )
         for i in range(8)
     ]
@@ -145,12 +152,8 @@ def test_native_write_snap_and_aux_roundtrip(tmp_path):
     tg = np.full(shape, 22.0, dtype=np.float32, order="F")
     foo = np.full(shape, 23.0, dtype=np.float32, order="F")
 
-    snap_path = dd.write_snap(
-        tmp_path / f"{root}_000.snap", *fields, overwrite=False
-    )
-    aux_path = dd.write_aux(
-        tmp_path / f"{root}_000.aux", p, tg, extra=[("foo", foo)]
-    )
+    snap_path = dd.write_snap(tmp_path / f"{root}_000.snap", *fields, overwrite=False)
+    aux_path = dd.write_aux(tmp_path / f"{root}_000.aux", p, tg, extra=[("foo", foo)])
     assert os.path.isfile(snap_path)
     assert os.path.isfile(aux_path)
 
@@ -175,8 +178,18 @@ def test_public_get_api_has_no_compact_aliases():
     assert dd.get_var_name("bx", latex=True) == r"$B_x$"
     assert dd.get_t(0) == 200.0
     for name in (
-        "getvar", "getx", "gety", "getz", "gett",
-        "getdx", "getdy", "getdz", "getdx1d", "getdy1d",
-        "getdz1d", "getgrid", "getvarname",
+        "getvar",
+        "getx",
+        "gety",
+        "getz",
+        "gett",
+        "getdx",
+        "getdy",
+        "getdz",
+        "getdx1d",
+        "getdy1d",
+        "getdz1d",
+        "getgrid",
+        "getvarname",
     ):
         assert not hasattr(dd, name)

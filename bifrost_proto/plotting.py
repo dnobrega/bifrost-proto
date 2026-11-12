@@ -13,7 +13,7 @@ from typing import Any, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import Colormap, Normalize
+from matplotlib.colors import Colormap, LogNorm, Normalize
 from matplotlib.ticker import AutoMinorLocator
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -86,24 +86,44 @@ def plot(
     destination = None
     if png is not False:
         destination = _png_path(
-            data, var, snap, png=png, axis=cut_axis,
-            coordinate=cut_coord, selections=selection, los=los,
+            data,
+            var,
+            snap,
+            png=png,
+            axis=cut_axis,
+            coordinate=cut_coord,
+            selections=selection,
+            los=los,
         )
-        if not isinstance(dpi, (int, np.integer)) or isinstance(dpi, (bool, np.bool_)) or dpi < 1:
+        if (
+            not isinstance(dpi, (int, np.integer))
+            or isinstance(dpi, (bool, np.bool_))
+            or dpi < 1
+        ):
             raise ValueError("dpi must be a positive integer")
         if destination.exists() and not overwrite:
-            raise FileExistsError(f"PNG already exists: {destination} (set overwrite=True)")
+            raise FileExistsError(
+                f"PNG already exists: {destination} (set overwrite=True)"
+            )
 
-    if contours is not None and (not isinstance(contours, dict)
-                                 or not isinstance(contours.get("var"), str)
-                                 or not contours["var"]):
+    if contours is not None and (
+        not isinstance(contours, dict)
+        or not isinstance(contours.get("var"), str)
+        or not contours["var"]
+    ):
         raise TypeError("contours must be a dict containing a nonempty 'var' name")
     uniform_z = cut_axis != "z"
     if los is None:
-        values = np.asarray(data.get_var(
-            var, snap, **selection, units=units,
-            uniform_z=uniform_z, low_memory=low_memory,
-        ))
+        values = np.asarray(
+            data.get_var(
+                var,
+                snap,
+                **selection,
+                units=units,
+                uniform_z=uniform_z,
+                low_memory=low_memory,
+            )
+        )
         plane = np.squeeze(values)
         if plane.ndim != 2:
             raise ValueError(
@@ -111,13 +131,21 @@ def plot(
                 f"but get_var returned shape {values.shape}."
             )
         coords = _get_plot_coordinates(
-            data, _get_location(data, var),
-            selection=selection, uniform_z=uniform_z,
+            data,
+            _get_location(data, var),
+            selection=selection,
+            uniform_z=uniform_z,
         )
     else:
         plane, coords = _integrated_plane(
-            data, var, snap, los=los, selection=selection,
-            units=units, low_memory=low_memory, stream=los_stream,
+            data,
+            var,
+            snap,
+            los=los,
+            selection=selection,
+            units=units,
+            low_memory=low_memory,
+            stream=los_stream,
         )
     horizontal, vertical = _plane_axes(cut_axis)
     _validate_plane_shape(plane, coords[horizontal], coords[vertical], cut_axis)
@@ -129,12 +157,21 @@ def plot(
     # Presets are applied independently; an explicit cmap or norm wins.
     if cmap is None or norm is None:
         from .plot_defaults import get_plot_preset
+
         default_cmap, default_norm = get_plot_preset(data, var, units=units, los=los)
         if cmap is None:
             cmap = default_cmap
         if norm is None:
             norm = default_norm
+            if (
+                isinstance(norm, LogNorm)
+                and norm.vmin is None
+                and not np.any(np.isfinite(plane) & (plane > 0))
+            ):
+                # Give all-masked logarithmic LOS images a valid colorbar.
+                norm = LogNorm(vmin=0.1, vmax=1.0)
     from .colormaps import register_colormaps
+
     register_colormaps()
 
     im = ax.imshow(
@@ -148,19 +185,30 @@ def plot(
     _format_axes(ax, horizontal=horizontal, vertical=vertical, minor_ticks=minor_ticks)
     if title:
         _set_titles(
-            ax, cut_axis=cut_axis,
+            ax,
+            cut_axis=cut_axis,
             cut_coord=float(coords[cut_axis]) if los is None else None,
             time_min=_snapshot_time_min(data, snap),
         )
     if contours is not None:
         ax._bifrost_contours = _plot_contours(
-            ax, data, contours, snap=snap, background_var=var, selection=selection,
-            cut_axis=cut_axis, uniform_z=uniform_z, units=units,
+            ax,
+            data,
+            contours,
+            snap=snap,
+            background_var=var,
+            selection=selection,
+            cut_axis=cut_axis,
+            uniform_z=uniform_z,
+            units=units,
             low_memory=low_memory,
         )
     if cbar:
         _add_colorbar(
-            fig, ax, im, label=_colorbar_label(data, var, units, los=los),
+            fig,
+            ax,
+            im,
+            label=_colorbar_label(data, var, units, los=los),
             position=cbar_position,
         )
     if destination is not None:
@@ -177,14 +225,22 @@ def _validate_physical_selector(axis: str, selector: Any) -> bool:
         if selector.step is not None:
             raise ValueError(f"{axis} slice.step is not supported for physical plots")
         for bound in (selector.start, selector.stop):
-            if bound is not None and (not isinstance(bound, (int, float, np.integer, np.floating))
-                                      or isinstance(bound, (bool, np.bool_))
-                                      or not np.isfinite(bound)):
+            if bound is not None and (
+                not isinstance(bound, (int, float, np.integer, np.floating))
+                or isinstance(bound, (bool, np.bool_))
+                or not np.isfinite(bound)
+            ):
                 raise TypeError(f"{axis} slice bounds must be finite numbers in Mm")
-        if selector.start is not None and selector.stop is not None and selector.start > selector.stop:
+        if (
+            selector.start is not None
+            and selector.stop is not None
+            and selector.start > selector.stop
+        ):
             raise ValueError(f"{axis} physical slice start must not exceed stop")
         return False
-    if isinstance(selector, (int, float, np.integer, np.floating)) and not isinstance(selector, (bool, np.bool_)):
+    if isinstance(selector, (int, float, np.integer, np.floating)) and not isinstance(
+        selector, (bool, np.bool_)
+    ):
         if not np.isfinite(selector):
             raise ValueError(f"{axis} cut coordinate must be finite")
         return True
@@ -199,7 +255,12 @@ def _validate_los_selection(selection: dict[str, Any]) -> None:
 
 
 def _los_geometry_weights(
-    data: Any, var: str, *, los: AxisName, selection: dict[str, Any], units: str,
+    data: Any,
+    var: str,
+    *,
+    los: AxisName,
+    selection: dict[str, Any],
+    units: str,
 ) -> tuple[dict[str, np.ndarray], np.ndarray]:
     """Shared physical LOS geometry/quadrature for volume and plane-wise reads."""
     location = _get_location(data, var)
@@ -216,8 +277,10 @@ def _los_geometry_weights(
     periodic = los in ("x", "y") and data._grid_meta().periodic[axis_index]
     full_period = False
     if shifted and periodic:
-        full_faces = np.asarray(data.get_grid(location=location, units="solar")[
-            axis_index], dtype=np.float64)
+        full_faces = np.asarray(
+            data.get_grid(location=location, units="solar")[axis_index],
+            dtype=np.float64,
+        )
         full_period = np.array_equal(positions, full_faces)
 
     if shifted and not full_period:
@@ -228,9 +291,13 @@ def _los_geometry_weights(
         weights[1:-1] = 0.5 * (differences[:-1] + differences[1:])
     else:
         spacing_selector = None if full_period else selection[los]
-        weights = np.asarray(spacing_function(
-            **{los: spacing_selector}, units="solar",
-        ), dtype=np.float64)
+        weights = np.asarray(
+            spacing_function(
+                **{los: spacing_selector},
+                units="solar",
+            ),
+            dtype=np.float64,
+        )
         if weights.shape != positions.shape or not np.all(weights > 0):
             raise ValueError("Invalid cell widths for LOS integration")
 
@@ -243,10 +310,17 @@ def _los_geometry_weights(
     return coords, weights
 
 
-def _integrated_plane(data: Any, var: str, snap: int, *, los: AxisName,
-                      selection: dict[str, Any], units: str,
-                      low_memory: bool | None, stream: bool = False,
-                      ) -> tuple[np.ndarray, dict[str, np.ndarray]]:
+def _integrated_plane(
+    data: Any,
+    var: str,
+    snap: int,
+    *,
+    los: AxisName,
+    selection: dict[str, Any],
+    units: str,
+    low_memory: bool | None,
+    stream: bool = False,
+) -> tuple[np.ndarray, dict[str, np.ndarray]]:
     """Integrate a native-Z LOS, optionally using memory-bounded 3-D slabs.
 
     Each streamed slab spans the entire LOS, but only a short interval along
@@ -255,7 +329,11 @@ def _integrated_plane(data: Any, var: str, snap: int, *, los: AxisName,
     Both paths share native-grid quadrature and post-integration Z remeshing.
     """
     coords, weights = _los_geometry_weights(
-        data, var, los=los, selection=selection, units=units,
+        data,
+        var,
+        los=los,
+        selection=selection,
+        units=units,
     )
     axis_index = "xyz".index(los)
     h, v = _plane_axes(los)
@@ -268,10 +346,11 @@ def _integrated_plane(data: Any, var: str, snap: int, *, los: AxisName,
         cut = "z" if los == "y" else "y"
         cut_index = "xyz".index(cut)
         positions = np.asarray(coords[cut])
-        full = np.asarray(data.get_grid(location=_get_location(data, var),
-                                        units="solar")[cut_index])
+        full = np.asarray(
+            data.get_grid(location=_get_location(data, var), units="solar")[cut_index]
+        )
         offset = int(np.searchsorted(full, positions[0]))
-        if not np.array_equal(full[offset:offset + positions.size], positions):
+        if not np.array_equal(full[offset : offset + positions.size], positions):
             raise ValueError(f"Cannot map the selected {cut} samples to native indices")
         out_spec = {0: "ijk,i->jk", 1: "ijk,j->ik", 2: "ijk,k->ij"}[axis_index]
         out_axis = (h, v).index(cut)
@@ -279,28 +358,44 @@ def _integrated_plane(data: Any, var: str, snap: int, *, los: AxisName,
         plane = np.empty(expected, dtype=np.float64)
         dtype = np.dtype(getattr(data, "dtype", "f4"))
         other_axis = next(axis for axis in "xyz" if axis not in (los, cut))
-        bytes_per_plane = (int(coords[los].size) * int(coords[other_axis].size)
-                           * dtype.itemsize)
+        bytes_per_plane = (
+            int(coords[los].size) * int(coords[other_axis].size) * dtype.itemsize
+        )
         target_bytes = int(_LOS_TARGET_MIB * 1024 * 1024)
         slab_size = min(int(_LOS_SLAB), max(1, target_bytes // max(1, bytes_per_plane)))
         for start in range(0, positions.size, slab_size):
             stop = min(start + slab_size, positions.size)
-            slab = np.asarray(data.get_var(
-                var, snap, **others, **{f"i{cut}": slice(offset + start, offset + stop)},
-                units=units, uniform_z=False, low_memory=low_memory,
-            ))
+            slab = np.asarray(
+                data.get_var(
+                    var,
+                    snap,
+                    **others,
+                    **{f"i{cut}": slice(offset + start, offset + stop)},
+                    units=units,
+                    uniform_z=False,
+                    low_memory=low_memory,
+                )
+            )
             part = np.einsum(out_spec, slab, weights, dtype=np.float64, optimize=False)
             if out_axis == 0:
                 plane[start:stop, :] = part
             else:
                 plane[:, start:stop] = part
     else:
-        values = np.asarray(data.get_var(
-            var, snap, **selection, units=units,
-            uniform_z=False, low_memory=low_memory,
-        ))
+        values = np.asarray(
+            data.get_var(
+                var,
+                snap,
+                **selection,
+                units=units,
+                uniform_z=False,
+                low_memory=low_memory,
+            )
+        )
         if values.ndim != 3 or values.shape != tuple(coords[a].size for a in "xyz"):
-            raise ValueError(f"Expected a selected 3-D cube for LOS integration, got {values.shape}")
+            raise ValueError(
+                f"Expected a selected 3-D cube for LOS integration, got {values.shape}"
+            )
         out_spec = {0: "ijk,i->jk", 1: "ijk,j->ik", 2: "ijk,k->ij"}[axis_index]
         plane = np.einsum(out_spec, values, weights, dtype=np.float64, optimize=False)
     if los != "z":
@@ -309,8 +404,9 @@ def _integrated_plane(data: Any, var: str, snap: int, *, los: AxisName,
     return plane, coords
 
 
-def _integrated_unit_plain(original: str, length_unit: str, *, solar: bool = False
-                           ) -> tuple[str, float]:
+def _integrated_unit_plain(
+    original: str, length_unit: str, *, solar: bool = False
+) -> tuple[str, float]:
     """Multiply a plain unit label by one length and simplify exact units.
 
     Solar metadata may contain Mm powers while the integration length is cm.
@@ -324,7 +420,7 @@ def _integrated_unit_plain(original: str, length_unit: str, *, solar: bool = Fal
         match = re.fullmatch(r"(Mm|cm|m)(?:\^(-?\d+))?", token)
         if solar and match and match.group(1) == "Mm":
             power = int(match.group(2) or 1)
-            correction *= 1e8 ** power
+            correction *= 1e8**power
             token = f"cm^{power}" if power != 1 else "cm"
         transformed.append(token)
 
@@ -336,7 +432,7 @@ def _integrated_unit_plain(original: str, length_unit: str, *, solar: bool = Fal
             length_power += int(match.group(1) or 1)
             if first_length is None:
                 first_length = i
-    replacement = (length_unit if length_power == 1 else f"{length_unit}^{length_power}")
+    replacement = length_unit if length_power == 1 else f"{length_unit}^{length_power}"
     result = []
     for i, token in enumerate(transformed):
         if re.fullmatch(rf"{re.escape(length_unit)}(?:\^(-?\d+))?", token):
@@ -354,25 +450,39 @@ def _latex_unit(plain: str) -> str:
     return re.sub(r"\^(-?\d+)", lambda m: f"$^{{{m.group(1)}}}$", plain)
 
 
-def _png_path(data: Any, var: str, snap: int, *, png: bool | str | Path,
-              axis: AxisName, coordinate: float | None,
-              selections: dict[str, Any], los: AxisName | None) -> Path:
+def _png_path(
+    data: Any,
+    var: str,
+    snap: int,
+    *,
+    png: bool | str | Path,
+    axis: AxisName,
+    coordinate: float | None,
+    selections: dict[str, Any],
+    los: AxisName | None,
+) -> Path:
     """Resolve PNG output under the simulation directory, like movies."""
     run_dir = Path(data.fdir).expanduser().resolve()
     directory = run_dir / "plots"
     if png is True:
         plane = {"x": "YZ", "y": "XZ", "z": "XY"}[axis]
-        mode = (f"{axis}={_coordinate_label(coordinate)}" if los is None
-                else f"los={los}")
+        mode = (
+            f"{axis}={_coordinate_label(coordinate)}" if los is None else f"los={los}"
+        )
         suffix = _roi_suffix(axis if los is None else "", selections)
         path = directory / f"{var}_{int(snap):04d}_{plane}_{mode}{suffix}.png"
     elif isinstance(png, (str, Path)):
         candidate = Path(png).expanduser()
         if candidate.name in {"", ".", ".."}:
             raise ValueError("png must specify a filename")
-        path = candidate if candidate.is_absolute() else (
-            directory / candidate if candidate.parent == Path(".")
-            else run_dir / candidate
+        path = (
+            candidate
+            if candidate.is_absolute()
+            else (
+                directory / candidate
+                if candidate.parent == Path(".")
+                else run_dir / candidate
+            )
         )
     else:
         raise TypeError("png must be False, True, or a .png filename/path")
@@ -394,7 +504,9 @@ def _parse_cut(
         if _validate_physical_selector(axis, selector):
             fixed.append((axis, float(selector)))
     if len(fixed) != 1:
-        raise ValueError("Pass exactly one scalar cut coordinate: x=..., y=..., or z=... .")
+        raise ValueError(
+            "Pass exactly one scalar cut coordinate: x=..., y=..., or z=... ."
+        )
     return fixed[0][0], fixed[0][1], selections
 
 
@@ -412,7 +524,11 @@ def _plot_contours(
     low_memory: bool | None,
 ) -> Any:
     """Overlay a registered variable on the same physical cut and ROI."""
-    if not isinstance(spec, dict) or not isinstance(spec.get("var"), str) or not spec["var"]:
+    if (
+        not isinstance(spec, dict)
+        or not isinstance(spec.get("var"), str)
+        or not spec["var"]
+    ):
         raise TypeError("contours must be a dict containing a nonempty 'var' name")
     contour_var = spec["var"]
     # Overlay contours on a centered image by default: otherwise two fields
@@ -422,18 +538,29 @@ def _plot_contours(
     centered = spec.get("centered", _get_location(data, background_var) == "center")
     if not isinstance(centered, (bool, np.bool_)):
         raise TypeError("contours['centered'] must be a boolean")
-    opts = {key: val for key, val in spec.items() if key not in ("var", "centered", "units")}
-    values = np.asarray(data.get_var(
-        contour_var, snap, **selection, uniform_z=uniform_z, centered=bool(centered),
-        units=spec.get("units", units), low_memory=low_memory,
-    ))
+    opts = {
+        key: val for key, val in spec.items() if key not in ("var", "centered", "units")
+    }
+    values = np.asarray(
+        data.get_var(
+            contour_var,
+            snap,
+            **selection,
+            uniform_z=uniform_z,
+            centered=bool(centered),
+            units=spec.get("units", units),
+            low_memory=low_memory,
+        )
+    )
     contour_plane = np.squeeze(values)
     if contour_plane.ndim != 2:
         raise ValueError(f"Expected a 2-D contour plane, got shape {values.shape}")
     h, v = _plane_axes(cut_axis)
     coords = _get_plot_coordinates(
-        data, "center" if centered else _get_location(data, contour_var),
-        selection=selection, uniform_z=uniform_z,
+        data,
+        "center" if centered else _get_location(data, contour_var),
+        selection=selection,
+        uniform_z=uniform_z,
     )
     _validate_plane_shape(contour_plane, coords[h], coords[v], cut_axis)
     return ax.contour(coords[h], coords[v], contour_plane.T, **opts)
@@ -453,8 +580,11 @@ def _get_plot_coordinates(
 ) -> dict[AxisName, np.ndarray]:
     """Return coordinate arrays/scalars matching exactly the selected data."""
     x, y, z = data.get_grid(
-        location=location, units="solar", br=False,
-        uniform_z=uniform_z, **selection,
+        location=location,
+        units="solar",
+        br=False,
+        uniform_z=uniform_z,
+        **selection,
     )
     return {
         "x": np.asarray(x, dtype=float),
@@ -490,21 +620,25 @@ def _validate_plane_shape(
 
 def _extent(horizontal: np.ndarray, vertical: np.ndarray) -> list[float]:
     """Return outer pixel edges from first/last sampled center positions."""
+
     def edges(values):
         """Extrapolate half a grid spacing at each end of an image axis."""
         centers = np.asarray(values, dtype=float)
         if centers.size < 2:
             raise ValueError("Image axis needs at least two coordinate points")
-        return (float(centers[0] - 0.5 * (centers[1] - centers[0])),
-                float(centers[-1] + 0.5 * (centers[-1] - centers[-2])))
+        return (
+            float(centers[0] - 0.5 * (centers[1] - centers[0])),
+            float(centers[-1] + 0.5 * (centers[-1] - centers[-2])),
+        )
 
     left, right = edges(horizontal)
     bottom, top = edges(vertical)
     return [left, right, bottom, top]
 
 
-def _format_axes(ax: Any, *, horizontal: AxisName, vertical: AxisName,
-                 minor_ticks: bool) -> None:
+def _format_axes(
+    ax: Any, *, horizontal: AxisName, vertical: AxisName, minor_ticks: bool
+) -> None:
     """Apply physical labels and optional minor ticks."""
     ax.set_xlabel(f"{horizontal} (Mm)")
     ax.set_ylabel(f"{vertical} (Mm)")
@@ -514,11 +648,15 @@ def _format_axes(ax: Any, *, horizontal: AxisName, vertical: AxisName,
         ax.tick_params(which="both", direction="out")
 
 
-def _set_titles(ax: Any, *, cut_axis: AxisName, cut_coord: float | None,
-                time_min: float) -> None:
+def _set_titles(
+    ax: Any, *, cut_axis: AxisName, cut_coord: float | None, time_min: float
+) -> None:
     """Show selected physical plane and physical snapshot time."""
-    label = (f"{cut_axis.upper()}={cut_coord:.2f} Mm" if cut_coord is not None
-             else f"LOS={cut_axis.upper()}")
+    label = (
+        f"{cut_axis.upper()}={cut_coord:.2f} Mm"
+        if cut_coord is not None
+        else f"LOS={cut_axis.upper()}"
+    )
     ax.set_title(label, loc="left")
     ax.set_title(f"t={time_min:.2f} min", loc="right")
 
@@ -528,7 +666,9 @@ def _snapshot_time_min(data: Any, snap: int) -> float:
     return float(np.asarray(data.get_t(snap, units="solar")).squeeze()) / 60.0
 
 
-def _colorbar_label(data: Any, var: str, units: str, *, los: AxisName | None = None) -> str:
+def _colorbar_label(
+    data: Any, var: str, units: str, *, los: AxisName | None = None
+) -> str:
     """Build the registered physical symbol and optional LOS-integrated unit."""
     try:
         name = data.get_var_name(var, latex=True)
@@ -544,8 +684,12 @@ def _colorbar_label(data: Any, var: str, units: str, *, los: AxisName | None = N
             unit = data.get_units(var, units=units, latex=True)
         else:
             plain = data.get_units(var, units=units, latex=False)
-            length = {"solar": "cm", "cgs": "cm", "si": "m", "bifrost": "Mm"}[units.lower()]
-            text, _ = _integrated_unit_plain(str(plain), length, solar=(units.lower() == "solar"))
+            length = {"solar": "cm", "cgs": "cm", "si": "m", "bifrost": "Mm"}[
+                units.lower()
+            ]
+            text, _ = _integrated_unit_plain(
+                str(plain), length, solar=(units.lower() == "solar")
+            )
             unit = _latex_unit(text)
     except (AttributeError, KeyError):
         unit = ""
@@ -557,15 +701,17 @@ def _colorbar_label(data: Any, var: str, units: str, *, los: AxisName | None = N
     return f"{name} ({unit})"
 
 
-def _add_colorbar(fig: Any, ax: Any, im: Any, *, label: str,
-                  position: ColorbarPosition) -> Any:
+def _add_colorbar(
+    fig: Any, ax: Any, im: Any, *, label: str, position: ColorbarPosition
+) -> Any:
     """Attach a colorbar to the supplied axes, preserving its parent figure."""
     if position not in {"top", "bottom", "left", "right"}:
         raise ValueError("cbar_position must be 'top', 'bottom', 'left', or 'right'.")
     if fig.get_constrained_layout():
         # Axes from make_axes_locatable do not take part in constrained layout.
-        colorbar = fig.colorbar(im, ax=ax, location=position,
-                                fraction=0.05, pad=0.02, aspect=30)
+        colorbar = fig.colorbar(
+            im, ax=ax, location=position, fraction=0.05, pad=0.02, aspect=30
+        )
         colorbar.set_label(label)
         return colorbar
     divider = make_axes_locatable(ax)

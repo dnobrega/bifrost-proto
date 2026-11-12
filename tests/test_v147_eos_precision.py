@@ -28,16 +28,29 @@ def _float64_reference(eos, rho, ee, name):
     i0 = np.minimum(np.floor(x).astype(np.int64), table.shape[0] - 2)
     j0 = np.minimum(np.floor(y).astype(np.int64), table.shape[1] - 2)
     fx, fy = x - i0, y - j0
-    value = ((1 - fx) * (1 - fy) * table[i0, j0] + fx * (1 - fy) * table[i0 + 1, j0]
-             + (1 - fx) * fy * table[i0, j0 + 1] + fx * fy * table[i0 + 1, j0 + 1])
+    value = (
+        (1 - fx) * (1 - fy) * table[i0, j0]
+        + fx * (1 - fy) * table[i0 + 1, j0]
+        + (1 - fx) * fy * table[i0, j0 + 1]
+        + fx * fy * table[i0 + 1, j0 + 1]
+    )
     return value if name == "tg" else np.exp(value)
 
 
 def _args(eos, name):
     table = eos._table(name)
-    return (table, float(eos.lnei[0]), float(1.0 / eos.dlnei), int(table.shape[0]),
-            float(eos.lnrho[0]), float(1.0 / eos.dlnrho), int(table.shape[1]),
-            name != "tg", 0.0, 0.0)
+    return (
+        table,
+        float(eos.lnei[0]),
+        float(1.0 / eos.dlnei),
+        int(table.shape[0]),
+        float(eos.lnrho[0]),
+        float(1.0 / eos.dlnrho),
+        int(table.shape[1]),
+        name != "tg",
+        0.0,
+        0.0,
+    )
 
 
 @pytest.mark.parametrize("name", OUTPUTS)
@@ -47,7 +60,9 @@ def test_compiled_and_python_flat_kernel_agree(name):
     compiled = eos.interpolate(rho, ee, out=name)
     python = np.empty_like(compiled)
     _python(eos_module._eos_interp_flat)(
-        _flat_memory_view(rho), _flat_memory_view(ee), *_args(eos, name),
+        _flat_memory_view(rho),
+        _flat_memory_view(ee),
+        *_args(eos, name),
         _flat_memory_view(python),
     )
     np.testing.assert_allclose(python, compiled, rtol=1.2e-7, atol=0.0)
@@ -88,8 +103,12 @@ def _float64_gamma1_reference(eos, rho, ee):
     p10 = table[i + 1, j]
     p01 = table[i, j + 1]
     p11 = table[i + 1, j + 1]
-    lnp = ((1 - fx) * (1 - fy) * p00 + fx * (1 - fy) * p10
-           + (1 - fx) * fy * p01 + fx * fy * p11)
+    lnp = (
+        (1 - fx) * (1 - fy) * p00
+        + fx * (1 - fy) * p10
+        + (1 - fx) * fy * p01
+        + fx * fy * p11
+    )
     chi_ee = ((1 - fy) * (p10 - p00) + fy * (p11 - p01)) / eos.dlnei
     chi_rho = ((1 - fx) * (p01 - p00) + fx * (p11 - p10)) / eos.dlnrho
     return chi_rho + chi_ee * np.exp(lnp) / (rho64 * ee64)
@@ -106,14 +125,24 @@ def test_gamma1_matches_python_body_and_float64_reference(layout):
     compiled = eos.gamma1(rho, ee)
     assert compiled.dtype == np.float32
 
-    args = (eos.lnpg, float(eos.lnei[0]), float(1 / eos.dlnei),
-            float(eos.lnrho[0]), float(1 / eos.dlnrho), 0.0, 0.0, 1.0)
+    args = (
+        eos.lnpg,
+        float(eos.lnei[0]),
+        float(1 / eos.dlnei),
+        float(eos.lnrho[0]),
+        float(1 / eos.dlnrho),
+        0.0,
+        0.0,
+        1.0,
+    )
     pyout = np.empty_like(compiled)
     if layout == "strided":
         _python(eos_module._gamma1_strided)(rho, ee, *args, pyout)
     else:
         _python(eos_module._gamma1_flat)(
-            _flat_memory_view(rho), _flat_memory_view(ee), *args,
+            _flat_memory_view(rho),
+            _flat_memory_view(ee),
+            *args,
             _flat_memory_view(pyout),
         )
     np.testing.assert_allclose(pyout, compiled, rtol=1.2e-7, atol=1e-8)

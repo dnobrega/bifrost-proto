@@ -40,7 +40,9 @@ def test_fused_response_matches_numpy_reference_c_and_f(tmp_path):
         logne = rng.uniform(8.05, 10.95, size=(17, 13, 11))
         tg = np.array(10.0**logt, dtype=np.float32, order=order)
         ne = np.array(10.0**logne, dtype=np.float32, order=order)
-        nh = np.array(rng.uniform(1e8, 1e12, size=tg.shape), dtype=np.float32, order=order)
+        nh = np.array(
+            rng.uniform(1e8, 1e12, size=tg.shape), dtype=np.float32, order=order
+        )
 
         expected = _reference(response, tg, ne, nh)
         got = response.evaluate_emissivity(tg, ne, nh)
@@ -49,12 +51,16 @@ def test_fused_response_matches_numpy_reference_c_and_f(tmp_path):
         np.testing.assert_allclose(got, expected, rtol=2e-6, atol=0.0)
 
 
-def test_fused_response_strided_view_matches_reference_without_modifying_inputs(tmp_path):
+def test_fused_response_strided_view_matches_reference_without_modifying_inputs(
+    tmp_path,
+):
     response = _make_response(tmp_path)
     rng = np.random.default_rng(2)
     shape = (28, 24, 20)
     tg0 = np.asfortranarray(10.0 ** rng.uniform(4.1, 7.9, size=shape), dtype=np.float32)
-    ne0 = np.asfortranarray(10.0 ** rng.uniform(8.1, 10.9, size=shape), dtype=np.float32)
+    ne0 = np.asfortranarray(
+        10.0 ** rng.uniform(8.1, 10.9, size=shape), dtype=np.float32
+    )
     nh0 = np.asfortranarray(rng.uniform(1e8, 1e12, size=shape), dtype=np.float32)
 
     tg = tg0[1:-1:2, 2:-2:2, 1:-1:2]
@@ -125,7 +131,9 @@ def test_instrument_recipe_uses_fused_response_method(tmp_path, monkeypatch):
     response = dd._instrument_response("aia193")
 
     def fail_evaluate(*args, **kwargs):
-        raise AssertionError("slow evaluate() path should not be used for uniform tables")
+        raise AssertionError(
+            "slow evaluate() path should not be used for uniform tables"
+        )
 
     monkeypatch.setattr(response, "evaluate", fail_evaluate)
     out = dd.get_var("aia193", 0, units="solar", br=True)
@@ -133,13 +141,14 @@ def test_instrument_recipe_uses_fused_response_method(tmp_path, monkeypatch):
     assert np.all(out > 0.0)
 
 
-def test_float32_quantized_uniform_axes_use_fast_path_without_hardcoded_origin(tmp_path, monkeypatch):
+def test_float32_quantized_uniform_axes_use_fast_path_without_hardcoded_origin(
+    tmp_path, monkeypatch
+):
     # Deliberately use non-round origins so a hidden 7.0/4.0 assumption would fail.
     logne32 = np.asarray(8.35 + 0.05 * np.arange(41), dtype=np.float32)
     logt32 = np.asarray(4.65 + 0.05 * np.arange(61), dtype=np.float32)
-    table = (
-        0.2 * logne32[:, None].astype(np.float64)
-        + 1.3 * logt32[None, :].astype(np.float64)
+    table = 0.2 * logne32[:, None].astype(np.float64) + 1.3 * logt32[None, :].astype(
+        np.float64
     )
     write_response(tmp_path, "aia193", table, logne32, logt32)
     response = InstrumentResponseTable("aia193", base_dir=tmp_path)
@@ -162,7 +171,9 @@ def test_float32_quantized_uniform_axes_use_fast_path_without_hardcoded_origin(t
     expected = _reference(response, tg, ne, nh)
 
     def fail_evaluate(*args, **kwargs):
-        raise AssertionError("float32-quantized uniform axes must use the fused fast path")
+        raise AssertionError(
+            "float32-quantized uniform axes must use the fused fast path"
+        )
 
     monkeypatch.setattr(response, "evaluate", fail_evaluate)
     got = response.evaluate_emissivity(tg, ne, nh)
@@ -186,7 +197,9 @@ def test_fused_response_negative_stride_view_matches_reference(tmp_path):
     rng = np.random.default_rng(20260924)
     shape = (17, 15, 13)
     tg0 = np.asfortranarray(10.0 ** rng.uniform(4.1, 7.9, size=shape), dtype=np.float32)
-    ne0 = np.asfortranarray(10.0 ** rng.uniform(8.1, 10.9, size=shape), dtype=np.float32)
+    ne0 = np.asfortranarray(
+        10.0 ** rng.uniform(8.1, 10.9, size=shape), dtype=np.float32
+    )
     nh0 = np.asfortranarray(rng.uniform(1e8, 1e12, size=shape), dtype=np.float32)
 
     tg = tg0[:, :, ::-1]

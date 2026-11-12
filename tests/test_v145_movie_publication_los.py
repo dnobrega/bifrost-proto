@@ -9,6 +9,7 @@ import stat
 import warnings
 
 import matplotlib
+
 matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
 import numpy as np
@@ -62,8 +63,7 @@ def test_real_signed_los_uses_zero_midpoint_and_explicit_norm_override():
     finally:
         plt.close(fig)
     manual = LogNorm(1e-3, 1e4)
-    fig, _, im = dd.plot("u_z", 0, los="z", norm=manual,
-                         cbar=False, title=False)
+    fig, _, im = dd.plot("u_z", 0, los="z", norm=manual, cbar=False, title=False)
     try:
         assert im.norm is manual
     finally:
@@ -100,8 +100,10 @@ def test_link_unsupported_falls_back_without_clobber(tmp_path, monkeypatch):
     target = tmp_path / "fallback.mp4"
     partial = _new_partial_movie(target)
     partial.write_bytes(b"complete MP4")
+
     def unsupported(*args, **kwargs):
         raise OSError(errno.EOPNOTSUPP, "filesystem does not support hardlinks")
+
     monkeypatch.setattr(os, "link", unsupported)
     _publish_movie(partial, target, overwrite=False)
     assert target.read_bytes() == b"complete MP4"
@@ -118,11 +120,14 @@ def test_failed_fallback_preserves_completed_partial(tmp_path, monkeypatch):
     target = tmp_path / "broken.mp4"
     partial = _new_partial_movie(target)
     partial.write_bytes(b"finished movie, should survive")
+
     def unsupported(*args, **kwargs):
         raise OSError(errno.EOPNOTSUPP, "unsupported")
+
     def interrupted_copy(src, dst, length):
         dst.write(b"incomplete")
         raise OSError(errno.ENOSPC, "simulated full disk")
+
     monkeypatch.setattr(os, "link", unsupported)
     monkeypatch.setattr(shutil, "copyfileobj", interrupted_copy)
     with pytest.raises(OSError, match="simulated full disk"):
@@ -135,14 +140,25 @@ def test_failed_fallback_preserves_completed_partial(tmp_path, monkeypatch):
 @pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg unavailable")
 def test_actual_mp4_permissions_and_unsupported_link(tmp_path, monkeypatch):
     from test_v142_review_fixes import _run
+
     dd = _run(tmp_path)
+
     def unsupported(*args, **kwargs):
         raise OSError(errno.EOPNOTSUPP, "emulated SMB mount")
+
     monkeypatch.setattr(os, "link", unsupported)
     old = os.umask(0o022)
     try:
-        target = dd.movie("r", [0], y=1.0, cbar=False, title=False,
-                          progress=False, output="perms.mp4", dpi=72)
+        target = dd.movie(
+            "r",
+            [0],
+            y=1.0,
+            cbar=False,
+            title=False,
+            progress=False,
+            output="perms.mp4",
+            dpi=72,
+        )
     finally:
         os.umask(old)
     assert target.is_file() and target.stat().st_size > 100
@@ -153,16 +169,28 @@ def test_actual_mp4_permissions_and_unsupported_link(tmp_path, monkeypatch):
 @pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg unavailable")
 def test_actual_movie_preserves_encoded_file_if_publish_fails(tmp_path, monkeypatch):
     from test_v142_review_fixes import _run
+
     dd = _run(tmp_path)
+
     def unsupported(*args, **kwargs):
         raise OSError(errno.EOPNOTSUPP, "emulated FUSE mount")
+
     def out_of_space(*args, **kwargs):
         raise OSError(errno.ENOSPC, "emulated disk full")
+
     monkeypatch.setattr(os, "link", unsupported)
     monkeypatch.setattr(shutil, "copyfileobj", out_of_space)
     with pytest.raises(OSError, match="Encoded movie preserved at"):
-        dd.movie("r", [0], y=1.0, cbar=False, title=False,
-                 progress=False, output="will-fail.mp4", dpi=72)
+        dd.movie(
+            "r",
+            [0],
+            y=1.0,
+            cbar=False,
+            title=False,
+            progress=False,
+            output="will-fail.mp4",
+            dpi=72,
+        )
     assert not (tmp_path / "movies" / "will-fail.mp4").exists()
     encoded = list((tmp_path / "movies").glob(".*.partial.mp4"))
     assert len(encoded) == 1 and encoded[0].stat().st_size > 100

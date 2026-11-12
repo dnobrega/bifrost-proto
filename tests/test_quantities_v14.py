@@ -47,29 +47,51 @@ def test_magnetic_block_on_constant_fields():
     b = np.sqrt(np.float32(77.0))
 
     assert np.allclose(interior(dd.get_var("modb", 0, units="bifrost", br=True)), b)
-    assert np.allclose(interior(dd.get_var("b_h", 0, units="bifrost", br=True)), np.sqrt(41.0))
-    assert np.allclose(interior(dd.get_var("bhat_x", 0, units="bifrost", br=True)), 4.0 / b)
-    assert np.allclose(interior(dd.get_var("bxob", 0, units="bifrost", br=True)), 4.0 / b)
-    assert np.allclose(interior(dd.get_var("bhat_y", 0, units="bifrost", br=True)), 5.0 / b)
-    assert np.allclose(interior(dd.get_var("bhat_z", 0, units="bifrost", br=True)), 6.0 / b)
+    assert np.allclose(
+        interior(dd.get_var("b_h", 0, units="bifrost", br=True)), np.sqrt(41.0)
+    )
+    assert np.allclose(
+        interior(dd.get_var("bhat_x", 0, units="bifrost", br=True)), 4.0 / b
+    )
+    assert np.allclose(
+        interior(dd.get_var("bxob", 0, units="bifrost", br=True)), 4.0 / b
+    )
+    assert np.allclose(
+        interior(dd.get_var("bhat_y", 0, units="bifrost", br=True)), 5.0 / b
+    )
+    assert np.allclose(
+        interior(dd.get_var("bhat_z", 0, units="bifrost", br=True)), 6.0 / b
+    )
 
-    assert np.allclose(interior(dd.get_var("divb", 0, units="bifrost", br=True)), 0.0, atol=2e-6)
-    assert np.allclose(interior(dd.get_var("modcurlb", 0, units="bifrost", br=True)), 0.0, atol=2e-6)
+    assert np.allclose(
+        interior(dd.get_var("divb", 0, units="bifrost", br=True)), 0.0, atol=2e-6
+    )
+    assert np.allclose(
+        interior(dd.get_var("modcurlb", 0, units="bifrost", br=True)), 0.0, atol=2e-6
+    )
     with np.errstate(divide="ignore", invalid="ignore"):
-        expected = (dd.get_var("modb", 0, units="bifrost", br=True)
-                    / np.abs(dd.get_var("divb", 0, units="bifrost", br=True)))
+        expected = dd.get_var("modb", 0, units="bifrost", br=True) / np.abs(
+            dd.get_var("divb", 0, units="bifrost", br=True)
+        )
     np.testing.assert_allclose(
         interior(dd.get_var("ldivb", 0, units="bifrost", br=True)),
-        interior(expected), rtol=1e-6, equal_nan=True,
+        interior(expected),
+        rtol=1e-6,
+        equal_nan=True,
     )
     with np.errstate(divide="ignore", invalid="ignore"):
-        expected = (dd.get_var("modb", 0, units="bifrost", br=True)
-                    / np.abs(dd.get_var("modcurlb", 0, units="bifrost", br=True)))
+        expected = dd.get_var("modb", 0, units="bifrost", br=True) / np.abs(
+            dd.get_var("modcurlb", 0, units="bifrost", br=True)
+        )
     np.testing.assert_allclose(
         interior(dd.get_var("lcurlb", 0, units="bifrost", br=True)),
-        interior(expected), rtol=1e-6, equal_nan=True,
+        interior(expected),
+        rtol=1e-6,
+        equal_nan=True,
     )
-    assert np.allclose(interior(dd.get_var("beta", 0, units="bifrost", br=True)), 14.0 / 77.0)
+    assert np.allclose(
+        interior(dd.get_var("beta", 0, units="bifrost", br=True)), 14.0 / 77.0
+    )
 
 
 def test_velocity_parallel_perpendicular_block_on_constant_fields():
@@ -82,7 +104,9 @@ def test_velocity_parallel_perpendicular_block_on_constant_fields():
 
     assert np.allclose(interior(dd.get_var("modu", 0, units="bifrost", br=True)), modu)
     assert np.allclose(interior(dd.get_var("u_h", 0, units="bifrost", br=True)), uh)
-    assert np.allclose(interior(dd.get_var("uparb", 0, units="bifrost", br=True)), uparb)
+    assert np.allclose(
+        interior(dd.get_var("uparb", 0, units="bifrost", br=True)), uparb
+    )
 
     expected_par = np.array([128.0 / 77.0, 160.0 / 77.0, 192.0 / 77.0])
     for axis, expected in zip("xyz", expected_par):
@@ -95,7 +119,9 @@ def test_velocity_parallel_perpendicular_block_on_constant_fields():
         assert np.allclose(interior(got), expected)
 
     uperpb = np.sqrt(np.sum(expected_perp * expected_perp))
-    assert np.allclose(interior(dd.get_var("uperpb", 0, units="bifrost", br=True)), uperpb)
+    assert np.allclose(
+        interior(dd.get_var("uperpb", 0, units="bifrost", br=True)), uperpb
+    )
 
 
 def test_velocity_derivative_block_and_clean_aliases():
@@ -107,18 +133,24 @@ def test_velocity_derivative_block_and_clean_aliases():
     assert np.allclose(interior(divu), 0.0, atol=2e-6)
     assert np.allclose(interior(modcurlu), 0.0, atol=2e-6)
     with np.errstate(divide="ignore", invalid="ignore"):
-        expected = (dd.get_var("modu", 0, units="bifrost", br=True)
-                    / np.abs(dd.get_var("modcurlu", 0, units="bifrost", br=True)))
+        expected = dd.get_var("modu", 0, units="bifrost", br=True) / np.abs(
+            dd.get_var("modcurlu", 0, units="bifrost", br=True)
+        )
     np.testing.assert_allclose(
         interior(dd.get_var("lcurlu", 0, units="bifrost", br=True)),
-        interior(expected), rtol=1e-6, equal_nan=True,
+        interior(expected),
+        rtol=1e-6,
+        equal_nan=True,
     )
     with np.errstate(divide="ignore", invalid="ignore"):
-        expected = (dd.get_var("modu", 0, units="bifrost", br=True)
-                    / np.abs(dd.get_var("divu", 0, units="bifrost", br=True)))
+        expected = dd.get_var("modu", 0, units="bifrost", br=True) / np.abs(
+            dd.get_var("divu", 0, units="bifrost", br=True)
+        )
     np.testing.assert_allclose(
         interior(dd.get_var("ldivu", 0, units="bifrost", br=True)),
-        interior(expected), rtol=1e-6, equal_nan=True,
+        interior(expected),
+        rtol=1e-6,
+        equal_nan=True,
     )
 
     assert dd.info("uh")["name"] == "u_h"
@@ -126,9 +158,17 @@ def test_velocity_derivative_block_and_clean_aliases():
 
     for removed in (
         "curlu",
-        "vort", "vort_x", "vort_y", "vort_z",
-        "uperb", "uperbx", "uperby", "uzperb",
-        "uxparb", "uyparb", "uzparb",
+        "vort",
+        "vort_x",
+        "vort_y",
+        "vort_z",
+        "uperb",
+        "uperbx",
+        "uperby",
+        "uzperb",
+        "uxparb",
+        "uyparb",
+        "uzparb",
     ):
         with pytest.raises(UnknownVariableError):
             dd.info(removed)

@@ -5,7 +5,11 @@ import bifrost_proto.quantities  # noqa: F401 -- populate the built-in registry
 
 
 def _aliases_for(name):
-    return {alias for alias, canonical in GLOBAL_REGISTRY.aliases.items() if canonical == name}
+    return {
+        alias
+        for alias, canonical in GLOBAL_REGISTRY.aliases.items()
+        if canonical == name
+    }
 
 
 def test_searchable_description_keywords_are_consistent():
@@ -24,9 +28,14 @@ def test_searchable_description_keywords_are_consistent():
 def test_descriptions_do_not_duplicate_location_or_storage_metadata():
     forbidden = (
         "cell center",
-        "x-face", "y-face", "z-face",
-        "x-edge", "y-edge", "z-edge",
-        "stored by", "stored in",
+        "x-face",
+        "y-face",
+        "z-face",
+        "x-edge",
+        "y-edge",
+        "z-edge",
+        "stored by",
+        "stored in",
         "historical suffix",
         "legacy stagger",
         "after centering",
@@ -34,7 +43,10 @@ def test_descriptions_do_not_duplicate_location_or_storage_metadata():
     )
     for name, spec in GLOBAL_REGISTRY.items():
         description = spec.description.lower()
-        assert not any(term in description for term in forbidden), (name, spec.description)
+        assert not any(term in description for term in forbidden), (
+            name,
+            spec.description,
+        )
 
 
 def test_clean_velocity_alias_policy():

@@ -21,6 +21,7 @@ class DummyData:
     def _grid_meta(self):
         class Meta:
             units = BifrostUnits()
+
         return Meta()
 
 
@@ -78,20 +79,30 @@ def test_unit_scaling_of_norm_and_los():
 def test_terrain_and_instrument_colors_with_reversed_versions():
     maps = make_colormaps()
     assert len(maps) == 24
-    for name in ("red_terrain", "green_terrain", "divergent_terrain",
-                 "aia94", "aia193", "aia304", "eui174", "xrt"):
+    for name in (
+        "red_terrain",
+        "green_terrain",
+        "divergent_terrain",
+        "aia94",
+        "aia193",
+        "aia304",
+        "eui174",
+        "xrt",
+    ):
         assert name in maps and name + "_r" in maps
         x = np.linspace(0, 1, 256)
         np.testing.assert_allclose(maps[name](x)[::-1], maps[name + "_r"](x), atol=1e-9)
-    np.testing.assert_allclose(maps["eui174"](np.linspace(0, 1, 256)),
-                               maps["aia171"](np.linspace(0, 1, 256)))
-    np.testing.assert_allclose(maps["xrt"](np.linspace(0, 1, 256)),
-                               maps["aia304"](np.linspace(0, 1, 256)))
+    np.testing.assert_allclose(
+        maps["eui174"](np.linspace(0, 1, 256)), maps["aia171"](np.linspace(0, 1, 256))
+    )
+    np.testing.assert_allclose(
+        maps["xrt"](np.linspace(0, 1, 256)), maps["aia304"](np.linspace(0, 1, 256))
+    )
     r, g, b = _idl3_rgb()
-    assert (r[0],g[0],b[0]) == (0,0,0)
-    assert (r[120],g[120],b[120]) == (173,0,0)
-    assert (r[176],g[176],b[176]) == (255,105,0)
-    assert (r[255],g[255],b[255]) == (255,255,255)
+    assert (r[0], g[0], b[0]) == (0, 0, 0)
+    assert (r[120], g[120], b[120]) == (173, 0, 0)
+    assert (r[176], g[176], b[176]) == (255, 105, 0)
+    assert (r[255], g[255], b[255]) == (255, 255, 255)
     register_colormaps()
     assert "red_terrain_r" in colormaps
     assert "eui174" in colormaps
@@ -99,11 +110,11 @@ def test_terrain_and_instrument_colors_with_reversed_versions():
 
 
 def test_sym_log_for_signed_quantities():
-    dd=DummyData()
+    dd = DummyData()
     for name, entry in PLOT_PRESETS.items():
         if entry[0] == "SymLogNorm":
-            _,norm=get_plot_preset(dd,name)
-            assert isinstance(norm,SymLogNorm)
+            _, norm = get_plot_preset(dd, name)
+            assert isinstance(norm, SymLogNorm)
 
 
 def test_real_plot_applies_and_overrides_presets():
@@ -121,8 +132,9 @@ def test_real_plot_applies_and_overrides_presets():
         plt.close(fig)
 
     manual = Normalize(-7, 5)
-    fig, ax, artist = dd.plot("r", 0, y=y, norm=manual,
-                               cmap="red_terrain_r", cbar=False, title=False)
+    fig, ax, artist = dd.plot(
+        "r", 0, y=y, norm=manual, cmap="red_terrain_r", cbar=False, title=False
+    )
     try:
         assert artist.norm is manual
         assert artist.get_cmap().name == "red_terrain_r"

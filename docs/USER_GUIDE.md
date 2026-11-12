@@ -31,9 +31,9 @@ yy = dd.get_y()
 zz = dd.get_z()
 
 # Read one variable in three different ways
-tg = dd.get_var("tg", snap)                                       # Full 3-D cube
-bz = dd.get_var("b_z", snap, x=slice(2, 12), y=slice(0, 10), z=2) # XY subdomain
-uz = dd.get_var("u_z", snap, x=25.5, centered=True, units="cgs") # YZ plane
+tg = dd.get_var("tg", snap)  # Full 3-D cube
+bz = dd.get_var("b_z", snap, x=slice(2, 12), y=slice(0, 10), z=2)  # XY subdomain
+uz = dd.get_var("u_z", snap, x=25.5, centered=True, units="cgs")  # YZ plane
 ```
 
 The physical selectors `x=`, `y=`, and `z=` use coordinates in **Mm**. A scalar selects a position; a `slice(start, stop)` selects a physical interval. `get_var` also supports index selectors `ix=`, `iy=`, `iz=`. Use `method="linear"` for interpolation at physical coordinates instead of the default `"nearest"` sampling. `centered=True` moves a staggered quantity to cell centers before selection.
@@ -68,13 +68,25 @@ print(dd.get_unit_type("qrad"))
 The registry contains native quantities, aliases and derived MHD diagnostics. You do not need to memorize the variable names.
 
 ```python
-print(dd.variables())           # All registered canonical variables
-print(dd.variables("pressure")) # Search names, aliases and descriptions
-print(dd.info("b_z"))           # Description, location and units
-print(dd.info("qrad", snap))    # Also report availability/source for this snapshot
+print(dd.variables())  # All registered canonical variables
+print(dd.variables("pressure"))  # Search names, aliases and descriptions
+print(dd.info("b_z"))  # Description, location and units
+print(dd.info("qrad", snap))  # Also report availability/source for this snapshot
 ```
 
 Examples of derived families include `modb`, `beta`, `modj`, `theta_jb`, `divu`, `modcurlu`, `modlf`, and the signed energy terms `qjoule`, `qpdv`, `qrad` and `qgenrad`. The latter two are **AUX-only** inputs, not reconstructed from thermodynamic variables. Their specific rates divide by density (`qrador`, `qgenrador`), while characteristic times use `e / abs(q)` (`tauqrad`, `tauqgenrad`). The sign of the heating/cooling terms is preserved.
+
+Signed scalar fields and individual vector components have absolute-value variants
+such as `absbx` (`absb_x`), `abseparb` and `absqrad`. The absolute value is taken on
+the source field's native mesh before any requested centering or resampling.
+These variants retain the source units and use `LogNorm` with `jet` by default.
+
+The cell-centered diagnostics `keparb`, `taurec3d` and `taudif3d` use the curl of
+the total electric field projected along B. With C = curl(E_parallel), the
+Bifrost-unit formulas are `|B × C|`, `|B|² / |B × C|` and `|B|² / |B · C|`,
+respectively. The two times convert to seconds and share the 0.1–1000 s default
+color scale of the other characteristic times. They are infinite when the
+respective curl projection vanishes at nonzero B.
 
 Availability of a particular native/AUX field varies between runs. Use `dd.info(variable, snap)` to check it.
 
@@ -88,14 +100,17 @@ dd.plot("tg", snap, z=2)
 
 # Overlay |B| = 100 G and save a PNG in <simulation>/plots/
 dd.plot(
-    "tg", snap, z=1.5,
+    "tg",
+    snap,
+    z=1.5,
     contours={
         "var": "modb",
         "levels": [1e2],
         "colors": "white",
         "linewidths": 0.7,
     },
-    png=True, overwrite=True,
+    png=True,
+    overwrite=True,
 )
 ```
 
@@ -110,8 +125,7 @@ from matplotlib.colors import LogNorm
 dd.plot("aia193", snap, y=2, norm=LogNorm(clip=True))
 
 # Synthetic LOS-integrated signal
-dd.plot("aia193", snap, los="z",
-        cmap="aia193", norm=LogNorm(vmin=1, vmax=2e4))
+dd.plot("aia193", snap, los="z", cmap="aia193", norm=LogNorm(vmin=1, vmax=2e4))
 ```
 
 Synthetic channels cover SDO/AIA, Hinode/XRT, and Solar Orbiter/EUI. **Local** values are in `DN cm^-1 s^-1 pix^-1` for `solar`/CGS; after LOS integration they are in `DN s^-1 pix^-1`. Therefore, local and integrated images need different color-scale limits. Instrumental colormaps are included without requiring SunPy at runtime. The response tables retain their original source metadata; see [third-party notices](../THIRD_PARTY_NOTICES.md).

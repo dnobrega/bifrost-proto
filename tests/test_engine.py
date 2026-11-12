@@ -123,11 +123,19 @@ def test_linear_coordinate_and_uniform_z():
     n = 24
     x = np.arange(n, dtype=np.float32)
     y = np.arange(n, dtype=np.float32)
-    z = (np.arange(n, dtype=np.float32) ** 1.2)
+    z = np.arange(n, dtype=np.float32) ** 1.2
     xx, yy, zz = np.meshgrid(x, y, z, indexing="ij")
     r = np.ones((n, n, n), dtype=np.float32)
-    arrays = {"r": r, "e": r, "px": r, "py": r, "pz": r,
-              "bx": xx.astype(np.float32), "by": yy.astype(np.float32), "bz": zz.astype(np.float32)}
+    arrays = {
+        "r": r,
+        "e": r,
+        "px": r,
+        "py": r,
+        "pz": r,
+        "bx": xx.astype(np.float32),
+        "by": yy.astype(np.float32),
+        "bz": zz.astype(np.float32),
+    }
     dd2 = ArrayData(arrays, x, y, z)
     native = dd2.get_var("r", 0, x=3.0, units="bifrost")
     uniform = dd2.get_var("r", 0, x=3.0, uniform_z=True, units="bifrost")
@@ -198,7 +206,9 @@ def test_public_y_coordinate_selection_uses_shifted_origin():
     # index.  The public coordinate y=7 corresponds to output index iy=7 even
     # though internally that is native index ny-1-7.
     n = 24
-    probe = np.broadcast_to(np.arange(n, dtype=np.float32)[None, :, None], (n, n, n)).copy()
+    probe = np.broadcast_to(
+        np.arange(n, dtype=np.float32)[None, :, None], (n, n, n)
+    ).copy()
     dd.arrays["probe_y"] = probe
     dd.register_variable("probe_y", location="center", unit_type="temperature")
 

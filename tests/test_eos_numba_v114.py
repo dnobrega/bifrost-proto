@@ -28,10 +28,18 @@ def make_eos(nei=41, nrho=37):
 
     # Use nontrivial but smooth synthetic tables. The logarithmic outputs are
     # kept in a numerically safe range for exponentiation.
-    eos.tg = np.asfortranarray(4200.0 + 19.0 * x + 13.0 * y + 0.07 * x * y, dtype=np.float32)
-    eos.lnpg = np.asfortranarray(8.0 + 0.017 * x + 0.011 * y + 2.0e-4 * x * y, dtype=np.float32)
-    eos.lnne = np.asfortranarray(24.0 + 0.013 * x + 0.009 * y + 1.0e-4 * x * y, dtype=np.float32)
-    eos.lnkr = np.asfortranarray(-7.0 + 0.009 * x + 0.006 * y + 7.0e-5 * x * y, dtype=np.float32)
+    eos.tg = np.asfortranarray(
+        4200.0 + 19.0 * x + 13.0 * y + 0.07 * x * y, dtype=np.float32
+    )
+    eos.lnpg = np.asfortranarray(
+        8.0 + 0.017 * x + 0.011 * y + 2.0e-4 * x * y, dtype=np.float32
+    )
+    eos.lnne = np.asfortranarray(
+        24.0 + 0.013 * x + 0.009 * y + 1.0e-4 * x * y, dtype=np.float32
+    )
+    eos.lnkr = np.asfortranarray(
+        -7.0 + 0.009 * x + 0.006 * y + 7.0e-5 * x * y, dtype=np.float32
+    )
     return eos
 
 
@@ -40,7 +48,9 @@ def physical_inputs(eos, shape, rng, order):
     xe = rng.uniform(0.2, len(eos.lnei) - 1.2, size=shape)
     yr = rng.uniform(0.2, len(eos.lnrho) - 1.2, size=shape)
     ee = np.array(np.exp(eos.lnei[0] + xe * eos.dlnei), dtype=np.float32, order=order)
-    rho = np.array(np.exp(eos.lnrho[0] + yr * eos.dlnrho), dtype=np.float32, order=order)
+    rho = np.array(
+        np.exp(eos.lnrho[0] + yr * eos.dlnrho), dtype=np.float32, order=order
+    )
     return rho, ee
 
 

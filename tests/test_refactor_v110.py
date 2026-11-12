@@ -50,11 +50,17 @@ def test_public_horizontal_names_are_b_h_and_u_h_only():
             "bz": 6 * rho,
             "pg": rho,
         },
-        coords, coords, coords,
+        coords,
+        coords,
+        coords,
     )
 
-    assert np.allclose(_interior(dd.get_var("b_h", 0, units="bifrost", br=True)), np.hypot(4.0, 5.0))
-    assert np.allclose(_interior(dd.get_var("u_h", 0, units="bifrost", br=True)), np.hypot(1.0, 2.0))
+    assert np.allclose(
+        _interior(dd.get_var("b_h", 0, units="bifrost", br=True)), np.hypot(4.0, 5.0)
+    )
+    assert np.allclose(
+        _interior(dd.get_var("u_h", 0, units="bifrost", br=True)), np.hypot(1.0, 2.0)
+    )
     assert dd.info("bh")["name"] == "b_h"
     assert dd.info("uh")["name"] == "u_h"
 
@@ -82,15 +88,15 @@ def test_edge_vector_curl_uses_up_derivatives_and_returns_face_values():
             "ez": yy.astype(np.float32),
             "pg": one,
         },
-        x, y, z,
+        x,
+        y,
+        z,
     )
     context = EvaluationContext(cache={})
     selection = _full(n)
 
     for axis in "xyz":
-        got = _curl_component(
-            dd, 0, selection, context, ("e_x", "e_y", "e_z"), axis
-        )
+        got = _curl_component(dd, 0, selection, context, ("e_x", "e_y", "e_z"), axis)
         assert np.allclose(_interior(got), 1.0, atol=3e-5)
 
 
@@ -113,7 +119,9 @@ def test_divergence_helper_rejects_edge_vectors():
             "ez": one,
             "pg": one,
         },
-        coords, coords, coords,
+        coords,
+        coords,
+        coords,
     )
     with pytest.raises(ValueError, match="xface/yface/zface"):
         _vector_divergence(
@@ -145,7 +153,9 @@ def test_face_vector_curl_keeps_dn_path_and_edge_locations():
             "bz": yy.astype(np.float32),
             "pg": one,
         },
-        x, y, z,
+        x,
+        y,
+        z,
     )
 
     for axis, location in zip("xyz", ("xedge", "yedge", "zedge")):

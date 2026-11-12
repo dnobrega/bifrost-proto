@@ -14,12 +14,20 @@ VALID_NAMES = {"aia94", "aia131", "aia171", "aia193", "aia211", "aia304", "aia33
 
 def main():
     """Command-line entry point."""
-    parser = argparse.ArgumentParser(description="Convert one legacy AIA ne-T IDL response table.")
-    parser.add_argument("source", help="Legacy .sav containing table, density and temperature")
+    parser = argparse.ArgumentParser(
+        description="Convert one legacy AIA ne-T IDL response table."
+    )
+    parser.add_argument(
+        "source", help="Legacy .sav containing table, density and temperature"
+    )
     parser.add_argument("--name", required=True, choices=sorted(VALID_NAMES))
-    parser.add_argument("--output-root", required=True, help="instrument_responses directory")
+    parser.add_argument(
+        "--output-root", required=True, help="instrument_responses directory"
+    )
     parser.add_argument("--abundance", default="Asplund 2021 coronal")
-    parser.add_argument("--ionization-equilibrium", default="legacy table; see original source")
+    parser.add_argument(
+        "--ionization-equilibrium", default="legacy table; see original source"
+    )
     parser.add_argument("--fill-value", type=float, default=0.0)
     args = parser.parse_args()
 

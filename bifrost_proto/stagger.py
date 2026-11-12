@@ -15,6 +15,7 @@ from numba import njit, prange
 # Geometry-aware coefficient construction (used for Z and as a fallback)
 # =============================================================================
 
+
 @njit(cache=True)
 def _calc_stagger_inv(x, n, deriv_order, offset):
     """Return one legacy interpolation/derivative coefficient vector."""
@@ -99,11 +100,15 @@ def build_nonuniform_coefficients(center, face, direction, derivative=False):
 # Legacy fixed periodic X/Y setup
 # =============================================================================
 
+
 def _periodic_indices(n, direction):
     """Return six periodic stencil indices for every point on a uniform axis."""
     shift = 2 if direction == "up" else 3
-    return (np.arange(n, dtype=np.int64)[:, None] - shift
-            + np.arange(6, dtype=np.int64)[None, :]) % n
+    return (
+        np.arange(n, dtype=np.int64)[:, None]
+        - shift
+        + np.arange(6, dtype=np.int64)[None, :]
+    ) % n
 
 
 def _legacy_interp_constants():
@@ -141,6 +146,7 @@ def _infer_uniform_spacing(coord):
 # =============================================================================
 # Exact-order kernels
 # =============================================================================
+
 
 @njit(parallel=True, cache=True)
 def _apply_fixed_x_interp(f, index, a, b, c):
@@ -253,11 +259,9 @@ def _apply_product_xy(u, v, index, a, b, c, axis, derivative):
                 v4 = u[i, t4, k] * v[i, t4, k]
                 v5 = u[i, t5, k] * v[i, t5, k]
             if derivative:
-                out[i, j, k] = (a * (v3 - v2) + b * (v4 - v1)
-                                + c * (v5 - v0))
+                out[i, j, k] = a * (v3 - v2) + b * (v4 - v1) + c * (v5 - v0)
             else:
-                out[i, j, k] = (a * (v3 + v2) + b * (v4 + v1)
-                                + c * (v5 + v0))
+                out[i, j, k] = a * (v3 + v2) + b * (v4 + v1) + c * (v5 + v0)
     return out
 
 
@@ -288,12 +292,19 @@ def apply_product_operator(name, u, v, center, face, *, spacing=None, precompute
     if axis in (0, 1):
         if spacing is None:
             spacing = _infer_uniform_spacing(center)
-        a, b, c = (_legacy_deriv_constants(spacing) if derivative
-                   else _legacy_interp_constants())
-        return _apply_product_xy(u, v, _periodic_indices(u.shape[axis], direction),
-                                 a, b, c, axis, derivative)
-    coeff, index = (precomputed if precomputed is not None else
-                    build_nonuniform_coefficients(center, face, direction, derivative))
+        a, b, c = (
+            _legacy_deriv_constants(spacing)
+            if derivative
+            else _legacy_interp_constants()
+        )
+        return _apply_product_xy(
+            u, v, _periodic_indices(u.shape[axis], direction), a, b, c, axis, derivative
+        )
+    coeff, index = (
+        precomputed
+        if precomputed is not None
+        else build_nonuniform_coefficients(center, face, direction, derivative)
+    )
     return _apply_product_z(u, v, coeff, index)
 
 
@@ -328,12 +339,19 @@ def apply_operator(name, f, center, face, *, spacing=None, precomputed=None):
             if spacing is None:
                 spacing = _infer_uniform_spacing(center)
             a, b, c = _legacy_deriv_constants(spacing)
-            return (_apply_fixed_x_deriv if axis == 0 else _apply_fixed_y_deriv)(f, index, a, b, c)
+            return (_apply_fixed_x_deriv if axis == 0 else _apply_fixed_y_deriv)(
+                f, index, a, b, c
+            )
         a, b, c = _legacy_interp_constants()
-        return (_apply_fixed_x_interp if axis == 0 else _apply_fixed_y_interp)(f, index, a, b, c)
+        return (_apply_fixed_x_interp if axis == 0 else _apply_fixed_y_interp)(
+            f, index, a, b, c
+        )
 
-    coeff, index = (precomputed if precomputed is not None
-                    else build_nonuniform_coefficients(center, face, direction, derivative))
+    coeff, index = (
+        precomputed
+        if precomputed is not None
+        else build_nonuniform_coefficients(center, face, direction, derivative)
+    )
     return _apply_z(f, coeff, index)
 
 
@@ -362,8 +380,12 @@ class StaggerGrid:
 
         self._zops = {}
         for direction in ("up", "dn"):
-            self._zops[direction] = build_nonuniform_coefficients(self.z, self.z_face, direction, False)
-            self._zops["dd" + direction] = build_nonuniform_coefficients(self.z, self.z_face, direction, True)
+            self._zops[direction] = build_nonuniform_coefficients(
+                self.z, self.z_face, direction, False
+            )
+            self._zops["dd" + direction] = build_nonuniform_coefficients(
+                self.z, self.z_face, direction, True
+            )
 
     def _check(self, f):
         """Validate full-domain float32 input required for exact operators."""
@@ -371,47 +393,78 @@ class StaggerGrid:
         if f.ndim != 3:
             raise ValueError(f"stagger expects a 3-D array, got {f.ndim}-D")
         if f.shape != self.shape:
-            raise ValueError(f"array shape {f.shape} does not match stagger mesh {self.shape}")
+            raise ValueError(
+                f"array shape {f.shape} does not match stagger mesh {self.shape}"
+            )
         if f.dtype != np.float32:
-            raise TypeError(f"stagger expects float32 arrays for IDL/C reproducibility; got {f.dtype}")
+            raise TypeError(
+                f"stagger expects float32 arrays for IDL/C reproducibility; got {f.dtype}"
+            )
         return f
 
     def xup(self, f):
         """Interpolate x-face values up to centers along X."""
-        f = self._check(f); return _apply_fixed_x_interp(f, self._xup_i, *self._interp_abc)
+        f = self._check(f)
+        return _apply_fixed_x_interp(f, self._xup_i, *self._interp_abc)
+
     def xdn(self, f):
         """Interpolate centered values down to x-faces along X."""
-        f = self._check(f); return _apply_fixed_x_interp(f, self._xdn_i, *self._interp_abc)
+        f = self._check(f)
+        return _apply_fixed_x_interp(f, self._xdn_i, *self._interp_abc)
+
     def yup(self, f):
         """Interpolate y-face values up to centers along Y."""
-        f = self._check(f); return _apply_fixed_y_interp(f, self._yup_i, *self._interp_abc)
+        f = self._check(f)
+        return _apply_fixed_y_interp(f, self._yup_i, *self._interp_abc)
+
     def ydn(self, f):
         """Interpolate centered values down to y-faces along Y."""
-        f = self._check(f); return _apply_fixed_y_interp(f, self._ydn_i, *self._interp_abc)
+        f = self._check(f)
+        return _apply_fixed_y_interp(f, self._ydn_i, *self._interp_abc)
+
     def zup(self, f):
         """Interpolate z-face values up to centers along Z."""
-        f = self._check(f); coeff, index = self._zops["up"]; return _apply_z(f, coeff, index)
+        f = self._check(f)
+        coeff, index = self._zops["up"]
+        return _apply_z(f, coeff, index)
+
     def zdn(self, f):
         """Interpolate centered values down to z-faces along Z."""
-        f = self._check(f); coeff, index = self._zops["dn"]; return _apply_z(f, coeff, index)
+        f = self._check(f)
+        coeff, index = self._zops["dn"]
+        return _apply_z(f, coeff, index)
+
     def ddxup(self, f):
         """Differentiate x-face values up to centers along X."""
-        f = self._check(f); return _apply_fixed_x_deriv(f, self._xup_i, *self._ddx_abc)
+        f = self._check(f)
+        return _apply_fixed_x_deriv(f, self._xup_i, *self._ddx_abc)
+
     def ddxdn(self, f):
         """Differentiate centered values down to x-faces along X."""
-        f = self._check(f); return _apply_fixed_x_deriv(f, self._xdn_i, *self._ddx_abc)
+        f = self._check(f)
+        return _apply_fixed_x_deriv(f, self._xdn_i, *self._ddx_abc)
+
     def ddyup(self, f):
         """Differentiate y-face values up to centers along Y."""
-        f = self._check(f); return _apply_fixed_y_deriv(f, self._yup_i, *self._ddy_abc)
+        f = self._check(f)
+        return _apply_fixed_y_deriv(f, self._yup_i, *self._ddy_abc)
+
     def ddydn(self, f):
         """Differentiate centered values down to y-faces along Y."""
-        f = self._check(f); return _apply_fixed_y_deriv(f, self._ydn_i, *self._ddy_abc)
+        f = self._check(f)
+        return _apply_fixed_y_deriv(f, self._ydn_i, *self._ddy_abc)
+
     def ddzup(self, f):
         """Differentiate z-face values up to centers along Z."""
-        f = self._check(f); coeff, index = self._zops["ddup"]; return _apply_z(f, coeff, index)
+        f = self._check(f)
+        coeff, index = self._zops["ddup"]
+        return _apply_z(f, coeff, index)
+
     def ddzdn(self, f):
         """Differentiate centered values down to z-faces along Z."""
-        f = self._check(f); coeff, index = self._zops["dddn"]; return _apply_z(f, coeff, index)
+        f = self._check(f)
+        coeff, index = self._zops["dddn"]
+        return _apply_z(f, coeff, index)
 
 
 class StaggerInterface:
@@ -423,7 +476,9 @@ class StaggerInterface:
         meta = data._grid_meta()
         dx = data._legacy_axis_spacing(meta, 0)
         dy = data._legacy_axis_spacing(meta, 1)
-        self.grid = StaggerGrid(meta.x, meta.xdn, meta.y, meta.ydn, meta.z, meta.zdn, dx=dx, dy=dy)
+        self.grid = StaggerGrid(
+            meta.x, meta.xdn, meta.y, meta.ydn, meta.z, meta.zdn, dx=dx, dy=dy
+        )
 
     def _apply(self, name, f, *, br=False):
         """Apply one full-domain stagger operator in native or physical orientation.
@@ -467,36 +522,47 @@ class StaggerInterface:
     def xup(self, f, *, br=False):
         """Interpolate x-face values up to cell centers along X."""
         return self._apply("xup", f, br=br)
+
     def xdn(self, f, *, br=False):
         """Interpolate cell-centered values down to x-faces along X."""
         return self._apply("xdn", f, br=br)
+
     def yup(self, f, *, br=False):
         """Interpolate y-face values up to cell centers along Y."""
         return self._apply("yup", f, br=br)
+
     def ydn(self, f, *, br=False):
         """Interpolate cell-centered values down to y-faces along Y."""
         return self._apply("ydn", f, br=br)
+
     def zup(self, f, *, br=False):
         """Interpolate z-face values up to cell centers along Z."""
         return self._apply("zup", f, br=br)
+
     def zdn(self, f, *, br=False):
         """Interpolate cell-centered values down to z-faces along Z."""
         return self._apply("zdn", f, br=br)
+
     def ddxup(self, f, *, br=False):
         """Differentiate x-face values up to cell centers along X."""
         return self._apply("ddxup", f, br=br)
+
     def ddxdn(self, f, *, br=False):
         """Differentiate cell-centered values down to x-faces along X."""
         return self._apply("ddxdn", f, br=br)
+
     def ddyup(self, f, *, br=False):
         """Differentiate y-face values up to cell centers along Y."""
         return self._apply("ddyup", f, br=br)
+
     def ddydn(self, f, *, br=False):
         """Differentiate cell-centered values down to y-faces along Y."""
         return self._apply("ddydn", f, br=br)
+
     def ddzup(self, f, *, br=False):
         """Differentiate z-face values up to cell centers along Z."""
         return self._apply("ddzup", f, br=br)
+
     def ddzdn(self, f, *, br=False):
         """Differentiate cell-centered values down to z-faces along Z."""
         return self._apply("ddzdn", f, br=br)

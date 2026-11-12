@@ -15,7 +15,9 @@ def make_tau_data(n=9):
     x = np.arange(n, dtype=np.float32)
     y = np.arange(n, dtype=np.float32)
     # Deliberately non-uniform native z to exercise the trapezoidal geometry.
-    z = np.asarray([0.0, 0.12, 0.29, 0.53, 0.86, 1.31, 1.90, 2.67, 3.61], dtype=np.float32)[:n]
+    z = np.asarray(
+        [0.0, 0.12, 0.29, 0.53, 0.86, 1.31, 1.90, 2.67, 3.61], dtype=np.float32
+    )[:n]
     shape = (n, n, n)
     ii, jj, kk = np.meshgrid(
         np.arange(n, dtype=np.float32),
@@ -33,9 +35,13 @@ def make_tau_data(n=9):
         "bx": np.zeros(shape, dtype=np.float32, order="F"),
         "by": np.zeros(shape, dtype=np.float32, order="F"),
         "bz": np.zeros(shape, dtype=np.float32, order="F"),
-        "ne": np.asfortranarray(2.0e12 * (1.0 + 0.015 * ii + 0.02 * kk), dtype=np.float32),
+        "ne": np.asfortranarray(
+            2.0e12 * (1.0 + 0.015 * ii + 0.02 * kk), dtype=np.float32
+        ),
         "tg": np.asfortranarray(5200.0 + 45.0 * jj + 120.0 * kk, dtype=np.float32),
-        "nh": np.asfortranarray(8.0e16 * (1.0 + 0.01 * ii + 0.03 * kk), dtype=np.float32),
+        "nh": np.asfortranarray(
+            8.0e16 * (1.0 + 0.01 * ii + 0.03 * kk), dtype=np.float32
+        ),
     }
     return ArrayData(arrays, x, y, z)
 
@@ -130,7 +136,9 @@ def test_tau500_uses_canonical_hion_temperature_and_electron_density():
     dd.arrays["hionne"] = np.full(shape, 3.0e12, dtype=np.float32, order="F")
 
     def no_eos(_snap):
-        raise AssertionError("tau500 must not force EOS thermodynamics when HION is available")
+        raise AssertionError(
+            "tau500 must not force EOS thermodynamics when HION is available"
+        )
 
     dd._eos = no_eos
 

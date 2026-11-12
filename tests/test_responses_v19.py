@@ -27,8 +27,12 @@ def attach_composition(dd, tmp_path):
 def write_response(root, name, table, logne, logt, **metadata):
     folder = Path(root) / name
     folder.mkdir(parents=True, exist_ok=True)
-    np.save(folder / "table.npy", np.asarray(table, dtype=np.float64), allow_pickle=False)
-    np.save(folder / "logne.npy", np.asarray(logne, dtype=np.float64), allow_pickle=False)
+    np.save(
+        folder / "table.npy", np.asarray(table, dtype=np.float64), allow_pickle=False
+    )
+    np.save(
+        folder / "logne.npy", np.asarray(logne, dtype=np.float64), allow_pickle=False
+    )
     np.save(folder / "logt.npy", np.asarray(logt, dtype=np.float64), allow_pickle=False)
     payload = {
         "format_version": 1,
@@ -73,11 +77,13 @@ def test_response_bilinear_interpolation_and_fill(tmp_path):
     ne = np.array([10.0**8.5, 10.0**9.25, 10.0**12])
     tg = np.array([10.0**5.5, 10.0**7.25, 10.0**6])
     got = response.evaluate(tg, ne)
-    expected = np.array([
-        2.0 * 8.5 + 3.0 * 5.5 + 4.0,
-        2.0 * 9.25 + 3.0 * 7.25 + 4.0,
-        -1.0,
-    ])
+    expected = np.array(
+        [
+            2.0 * 8.5 + 3.0 * 5.5 + 4.0,
+            2.0 * 9.25 + 3.0 * 7.25 + 4.0,
+            -1.0,
+        ]
+    )
     assert np.allclose(got, expected)
 
 
@@ -132,12 +138,14 @@ def test_aia_xrt_eui_share_temperature_and_height_emissivity_mask(tmp_path):
 
     # Native Bifrost z is ascending. In the package's physical convention,
     # physical height in native array order is -z_native.
-    dd._meta_cache[0].z[:] = np.asarray([-3.0, -2.0, -1.0, 0.0, 1.0, 2.0], dtype=np.float32)
+    dd._meta_cache[0].z[:] = np.asarray(
+        [-3.0, -2.0, -1.0, 0.0, 1.0, 2.0], dtype=np.float32
+    )
 
     dd.arrays["ne"] = np.full(shape, 1.0e9, dtype=np.float32, order="F")
     tg = np.full(shape, 1.0e6, dtype=np.float32, order="F")
-    tg[:, :, 1] = 9999.0   # z_phys=+2 Mm: removed only by T mask
-    tg[:, :, 2] = 1.0e4    # exact threshold remains valid
+    tg[:, :, 1] = 9999.0  # z_phys=+2 Mm: removed only by T mask
+    tg[:, :, 2] = 1.0e4  # exact threshold remains valid
     dd.arrays["tg"] = tg
 
     response_root = tmp_path / "responses"
@@ -166,9 +174,7 @@ def test_aia_xrt_eui_share_temperature_and_height_emissivity_mask(tmp_path):
 
     # A native subdomain crossing both cuts must match cropping the full result.
     full = dd.get_var("aia193", 0, units="solar", br=True)
-    sub = dd.get_var(
-        "aia193", 0, iz_br=slice(1, 5), units="solar", br=True
-    )
+    sub = dd.get_var("aia193", 0, iz_br=slice(1, 5), units="solar", br=True)
     np.testing.assert_array_equal(sub, full[:, :, 1:5])
 
     # The public physical orientation reverses the same physical mask; it does

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Microbenchmark representative serial vs parallel kernels from v0.1.22."""
+
 from __future__ import annotations
 
 import argparse
@@ -58,7 +59,7 @@ def main():
     args = parser.parse_args()
 
     rng = np.random.default_rng(122)
-    size = args.n ** 3
+    size = args.n**3
     x = rng.normal(size=size).astype(np.float32)
     y = rng.normal(size=size).astype(np.float32)
     z = rng.normal(size=size).astype(np.float32)
@@ -76,7 +77,7 @@ def main():
         ts = best(serial, (*inputs, out_s), args.repeat)
         tp = best(parallel, (*inputs, out_p), args.repeat)
         assert np.array_equal(out_s, out_p)
-        print(f"{label:8s} serial={ts:.6f}s parallel={tp:.6f}s speedup={ts/tp:.2f}x")
+        print(f"{label:8s} serial={ts:.6f}s parallel={tp:.6f}s speedup={ts / tp:.2f}x")
 
 
 if __name__ == "__main__":

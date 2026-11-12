@@ -15,7 +15,11 @@ def _idl(directory, name, snapname=None):
         "! comment not a parameter\n"
         "; snapname = 'commented_out'\n"
         "mx = 12\n"
-        + (f"SNAPNAME = '{snapname}   ' ; trailing comment\n" if snapname is not None else "")
+        + (
+            f"SNAPNAME = '{snapname}   ' ; trailing comment\n"
+            if snapname is not None
+            else ""
+        )
         + "my = 12\n"
     )
     (directory / name).write_text(content, encoding="utf-8")
@@ -146,8 +150,11 @@ def test_discovered_root_reads_real_snapshot_data(tmp_path):
         encoding="utf-8",
     )
     data = np.memmap(
-        tmp_path / "demo_000.snap", dtype="<f4", mode="w+",
-        shape=(n, n, n, 8), order="F",
+        tmp_path / "demo_000.snap",
+        dtype="<f4",
+        mode="w+",
+        shape=(n, n, n, 8),
+        order="F",
     )
     data[..., 0] = 3.25  # r
     data.flush()

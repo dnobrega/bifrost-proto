@@ -1,4 +1,5 @@
 """Compare the v1.17 vectorized uniform-Z path with the current parallel kernel."""
+
 from __future__ import annotations
 
 import argparse
@@ -70,8 +71,10 @@ def main():
     print(f"one cube    : {gib:.3f} GiB")
     print(f"v1.17 numpy : {told:.4f} s")
     print(f"current numba : {tnew:.4f} s")
-    print(f"speed-up    : {told/tnew:.2f}x")
-    print("The current kernel allocates only the output cube; the old path also materialized")
+    print(f"speed-up    : {told / tnew:.2f}x")
+    print(
+        "The current kernel allocates only the output cube; the old path also materialized"
+    )
     print("two np.take() cubes and float64 broadcast temporaries.")
 
 

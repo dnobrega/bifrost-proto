@@ -36,12 +36,16 @@ def test_real_memmap_layout_and_unknown_aux(tmp_path):
 
     shape = (n, n, n)
     fields = [np.full(shape, i + 1, dtype=np.float32, order="F") for i in range(8)]
-    mm = np.memmap(tmp_path / f"{root}.snap", dtype="<f4", mode="w+", order="F", shape=shape + (8,))
+    mm = np.memmap(
+        tmp_path / f"{root}.snap", dtype="<f4", mode="w+", order="F", shape=shape + (8,)
+    )
     for i, field in enumerate(fields):
         mm[..., i] = field
     mm.flush()
 
-    aux = np.memmap(tmp_path / f"{root}.aux", dtype="<f4", mode="w+", order="F", shape=shape + (1,))
+    aux = np.memmap(
+        tmp_path / f"{root}.aux", dtype="<f4", mode="w+", order="F", shape=shape + (1,)
+    )
     aux[..., 0] = 42.0
     aux.flush()
 
@@ -106,7 +110,10 @@ def test_getvar_br_returns_native_bifrost_bytes(tmp_path):
 
     mm = np.memmap(
         tmp_path / f"{root}.snap",
-        dtype="<f4", mode="w+", order="F", shape=shape + (8,),
+        dtype="<f4",
+        mode="w+",
+        order="F",
+        shape=shape + (8,),
     )
     for i, field in enumerate(fields):
         mm[..., i] = field

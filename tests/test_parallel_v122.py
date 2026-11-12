@@ -63,7 +63,9 @@ def test_uniform_z_parallel_kernels_are_bitwise_equal_to_direct_reference():
 def test_parallel_vector_algebra_is_bitwise_stable():
     rng = np.random.default_rng(123)
     shape = (15, 11, 9)
-    arrays = [np.array(rng.normal(size=shape), dtype=np.float32, order="F") for _ in range(6)]
+    arrays = [
+        np.array(rng.normal(size=shape), dtype=np.float32, order="F") for _ in range(6)
+    ]
     ax, ay, az, bx, by, bz = arrays
 
     got_dot = np.empty_like(ax)
@@ -86,8 +88,7 @@ def test_parallel_vector_algebra_is_bitwise_stable():
         for j in range(shape[1]):
             for i in range(shape[0]):
                 ref_cross[i, j, k] = -(
-                    ax[i, j, k] * by[i, j, k]
-                    - ay[i, j, k] * bx[i, j, k]
+                    ax[i, j, k] * by[i, j, k] - ay[i, j, k] * bx[i, j, k]
                 )
     assert np.array_equal(got_cross, ref_cross)
 

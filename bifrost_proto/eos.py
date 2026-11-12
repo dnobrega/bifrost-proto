@@ -136,7 +136,9 @@ def _eos_interp_strided_3d(
         for j in range(ny):
             for i in range(nx):
                 x = (np.log(np.float64(ee[i, j, k])) + log_ee_scale - lnei0) * inv_dlnei
-                y = (np.log(np.float64(rho[i, j, k])) + log_rho_scale - lnrho0) * inv_dlnrho
+                y = (
+                    np.log(np.float64(rho[i, j, k])) + log_rho_scale - lnrho0
+                ) * inv_dlnrho
 
                 if x < 0.0:
                     x = 0.0
@@ -172,7 +174,6 @@ def _eos_interp_strided_3d(
                     value = np.exp(value)
 
                 out[i, j, k] = value
-
 
 
 def _same_contiguous_layout(*arrays):
@@ -227,8 +228,18 @@ def _eos_interp_general(
 
 
 @njit(cache=True)
-def _gamma1_cell(rho, ee, table, lnei0, inv_dle, lnrho0, inv_dlr,
-                 log_ee_scale, log_rho_scale, product_scale):
+def _gamma1_cell(
+    rho,
+    ee,
+    table,
+    lnei0,
+    inv_dle,
+    lnrho0,
+    inv_dlr,
+    log_ee_scale,
+    log_rho_scale,
+    product_scale,
+):
     """Evaluate Gamma_1 from one bilinear log-pressure interpolant."""
     rho = np.float64(rho)  # float64 arithmetic with and without JIT
     ee = np.float64(ee)
@@ -243,35 +254,77 @@ def _gamma1_cell(rho, ee, table, lnei0, inv_dle, lnrho0, inv_dlr,
     q10 = np.float64(table[i + 1, j])
     q01 = np.float64(table[i, j + 1])
     q11 = np.float64(table[i + 1, j + 1])
-    lnpg = ((1.0 - fx) * (1.0 - fy) * q00
-            + fx * (1.0 - fy) * q10
-            + (1.0 - fx) * fy * q01 + fx * fy * q11)
+    lnpg = (
+        (1.0 - fx) * (1.0 - fy) * q00
+        + fx * (1.0 - fy) * q10
+        + (1.0 - fx) * fy * q01
+        + fx * fy * q11
+    )
     chi_e = ((1.0 - fy) * (q10 - q00) + fy * (q11 - q01)) * inv_dle
     chi_r = ((1.0 - fx) * (q01 - q00) + fx * (q11 - q10)) * inv_dlr
     return chi_r + chi_e * np.exp(lnpg) / (rho * ee * product_scale)
 
 
 @njit(cache=True, parallel=True)
-def _gamma1_flat(rho, ee, table, lnei0, inv_dle, lnrho0, inv_dlr,
-                 log_ee_scale, log_rho_scale, product_scale, out):
+def _gamma1_flat(
+    rho,
+    ee,
+    table,
+    lnei0,
+    inv_dle,
+    lnrho0,
+    inv_dlr,
+    log_ee_scale,
+    log_rho_scale,
+    product_scale,
+    out,
+):
     """Evaluate Gamma_1 for contiguous C/F arrays with one output buffer."""
     for p in prange(out.size):
-        out[p] = _gamma1_cell(rho[p], ee[p], table, lnei0, inv_dle,
-                              lnrho0, inv_dlr, log_ee_scale,
-                              log_rho_scale, product_scale)
+        out[p] = _gamma1_cell(
+            rho[p],
+            ee[p],
+            table,
+            lnei0,
+            inv_dle,
+            lnrho0,
+            inv_dlr,
+            log_ee_scale,
+            log_rho_scale,
+            product_scale,
+        )
 
 
 @njit(cache=True, parallel=True)
-def _gamma1_strided(rho, ee, table, lnei0, inv_dle, lnrho0, inv_dlr,
-                    log_ee_scale, log_rho_scale, product_scale, out):
+def _gamma1_strided(
+    rho,
+    ee,
+    table,
+    lnei0,
+    inv_dle,
+    lnrho0,
+    inv_dlr,
+    log_ee_scale,
+    log_rho_scale,
+    product_scale,
+    out,
+):
     """Evaluate Gamma_1 on noncontiguous 3-D views without input copies."""
     nx, ny, nz = out.shape
     for k in prange(nz):
         for j in range(ny):
             for i in range(nx):
                 out[i, j, k] = _gamma1_cell(
-                    rho[i, j, k], ee[i, j, k], table, lnei0, inv_dle,
-                    lnrho0, inv_dlr, log_ee_scale, log_rho_scale, product_scale
+                    rho[i, j, k],
+                    ee[i, j, k],
+                    table,
+                    lnei0,
+                    inv_dle,
+                    lnrho0,
+                    inv_dlr,
+                    log_ee_scale,
+                    log_rho_scale,
+                    product_scale,
                 )
 
 
@@ -322,13 +375,18 @@ class EOSTable:
         Ranges use a small tolerance to accommodate float32 rounding of
         otherwise valid table-boundary values; genuine outliers still fail.
         """
-        ranges = (("rho", rho, self.lnrho, rho_scale),
-                  ("specific internal energy", ee, self.lnei, ee_scale))
+        ranges = (
+            ("rho", rho, self.lnrho, rho_scale),
+            ("specific internal energy", ee, self.lnei, ee_scale),
+        )
         for name, values, logaxis, scale in ranges:
             low, high = float(np.exp(logaxis[0])), float(np.exp(logaxis[-1]))
             # A reduction does not materialize any full-cube temporary apart
             # from NumPy's finite/range masks, and is executed outside Numba.
-            minimum, maximum = float(np.min(values)) * scale, float(np.max(values)) * scale
+            minimum, maximum = (
+                float(np.min(values)) * scale,
+                float(np.max(values)) * scale,
+            )
             if not (np.isfinite(minimum) and np.isfinite(maximum)):
                 raise ValueError(f"EOS {name} contains NaN or infinite values")
             if minimum < low * (1 - 1e-6) or maximum > high * (1 + 1e-6):
@@ -464,18 +522,30 @@ class EOSTable:
         self._validate_inputs(rho, ee, rho_scale=rho_scale, ee_scale=ee_scale)
         order = "F" if rho.flags.f_contiguous and not rho.flags.c_contiguous else "C"
         out = np.empty(rho.shape, dtype=np.float32, order=order)
-        args = (self.lnpg, float(self.lnei[0]), float(1.0 / self.dlnei),
-                float(self.lnrho[0]), float(1.0 / self.dlnrho),
-                float(np.log(ee_scale)), float(np.log(rho_scale)),
-                float(ee_scale * rho_scale))
+        args = (
+            self.lnpg,
+            float(self.lnei[0]),
+            float(1.0 / self.dlnei),
+            float(self.lnrho[0]),
+            float(1.0 / self.dlnrho),
+            float(np.log(ee_scale)),
+            float(np.log(rho_scale)),
+            float(ee_scale * rho_scale),
+        )
         if _same_contiguous_layout(rho, ee, out):
-            _gamma1_flat(_flat_memory_view(rho), _flat_memory_view(ee),
-                         *args, _flat_memory_view(out))
+            _gamma1_flat(
+                _flat_memory_view(rho),
+                _flat_memory_view(ee),
+                *args,
+                _flat_memory_view(out),
+            )
         elif rho.ndim == 3:
             _gamma1_strided(rho, ee, *args, out)
         else:
             # Small general/broadcasted inputs; retain a simple fallback.
-            pg = self.interpolate(rho, ee, out="pg", rho_scale=rho_scale, ee_scale=ee_scale)
+            pg = self.interpolate(
+                rho, ee, out="pg", rho_scale=rho_scale, ee_scale=ee_scale
+            )
             chi_r, chi_e = self.pressure_log_derivatives(rho * rho_scale, ee * ee_scale)
             out[...] = chi_r + chi_e * pg / (rho * ee * rho_scale * ee_scale)
         return out

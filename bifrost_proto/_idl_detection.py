@@ -66,7 +66,9 @@ def detect_snapname(folder):
                 f"unavailable. Specify file_root or idlparam explicitly: {choices}"
             ) from exc
         except KeyboardInterrupt as exc:
-            raise ValueError("Simulation selection cancelled; specify file_root explicitly") from exc
+            raise ValueError(
+                "Simulation selection cancelled; specify file_root explicitly"
+            ) from exc
 
         if choice in counts:
             return choice

@@ -17,20 +17,28 @@ from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 
 TERRAIN_HSV = {
     "red_terrain": [
-        (0.0002, 0, 0, 100), (0.0002666, 36, 60, 40),
-        (0.0004, 48, 71, 100), (0.0005333, 359, 70, 87),
+        (0.0002, 0, 0, 100),
+        (0.0002666, 36, 60, 40),
+        (0.0004, 48, 71, 100),
+        (0.0005333, 359, 70, 87),
         (0.0006, 359, 100, 75),
     ],
     "green_terrain": [
-        (0.0002, 0, 0, 100), (0.0002666, 36, 50, 70),
-        (0.0004, 48, 71, 100), (0.0005333, 109, 70, 87),
+        (0.0002, 0, 0, 100),
+        (0.0002666, 36, 50, 70),
+        (0.0004, 48, 71, 100),
+        (0.0005333, 109, 70, 87),
         (0.0006, 129, 80, 90),
     ],
     "divergent_terrain": [
-        (-0.00060, 229, 100, 75), (-0.00053, 189, 70, 87),
-        (-0.00040, 97, 70, 100), (-0.0002666, 107, 60, 40),
-        (0, 0, 0, 100), (0.0002666, 36, 60, 40),
-        (0.00040, 48, 71, 100), (0.00053, 359, 70, 87),
+        (-0.00060, 229, 100, 75),
+        (-0.00053, 189, 70, 87),
+        (-0.00040, 97, 70, 100),
+        (-0.0002666, 107, 60, 40),
+        (0, 0, 0, 100),
+        (0.0002666, 36, 60, 40),
+        (0.00040, 48, 71, 100),
+        (0.00053, 359, 70, 87),
         (0.00060, 359, 100, 75),
     ],
 }
@@ -40,8 +48,10 @@ def _terrain(name, points):
     """Convert user-defined HSV control points into a 256-color map."""
     low, high = points[0][0], points[-1][0]
     colors = [
-        ((value - low) / (high - low),
-         colorsys.hsv_to_rgb(hue / 360, saturation / 100, brightness / 100))
+        (
+            (value - low) / (high - low),
+            colorsys.hsv_to_rgb(hue / 360, saturation / 100, brightness / 100),
+        )
         for value, hue, saturation, brightness in points
     ]
     return LinearSegmentedColormap.from_list(name, colors, N=256)
@@ -85,8 +95,11 @@ def make_colormaps():
     maps = {name: _terrain(name, points) for name, points in TERRAIN_HSV.items()}
     for name, rgb in _instrument_rgb().items():
         maps[name] = ListedColormap(np.column_stack(rgb) / 255.0, name=name)
-    return {key: cm for name, cmap in maps.items()
-            for key, cm in ((name, cmap), (f"{name}_r", cmap.reversed(name=f"{name}_r")))}
+    return {
+        key: cm
+        for name, cmap in maps.items()
+        for key, cm in ((name, cmap), (f"{name}_r", cmap.reversed(name=f"{name}_r")))
+    }
 
 
 @lru_cache(maxsize=1)

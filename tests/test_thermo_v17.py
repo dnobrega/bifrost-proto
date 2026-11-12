@@ -48,10 +48,16 @@ def test_pressure_alfven_and_mach_block_on_constant_fields():
     va = np.sqrt(b2 / 2.0)
 
     assert np.allclose(interior(dd.get_var("pb", 0, units="bifrost", br=True)), pb)
-    assert np.allclose(interior(dd.get_var("pt", 0, units="bifrost", br=True)), 7.0 + pb)
-    assert np.allclose(interior(dd.get_var("beta", 0, units="bifrost", br=True)), 7.0 / pb)
+    assert np.allclose(
+        interior(dd.get_var("pt", 0, units="bifrost", br=True)), 7.0 + pb
+    )
+    assert np.allclose(
+        interior(dd.get_var("beta", 0, units="bifrost", br=True)), 7.0 / pb
+    )
     assert np.allclose(interior(dd.get_var("va", 0, units="bifrost", br=True)), va)
-    assert np.allclose(interior(dd.get_var("mach_a", 0, units="bifrost", br=True)), modu / va)
+    assert np.allclose(
+        interior(dd.get_var("mach_a", 0, units="bifrost", br=True)), modu / va
+    )
     assert np.array_equal(
         dd.get_var("man", 0, units="bifrost", br=True),
         dd.get_var("mach_a", 0, units="bifrost", br=True),

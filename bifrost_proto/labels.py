@@ -12,6 +12,8 @@ families are handled by small deterministic rules.
 
 from __future__ import annotations
 
+from .quantities import _ABSOLUTE_SOURCES
+
 _COMPONENT_SYMBOL = {
     "b": r"B",
     "u": r"u",
@@ -110,6 +112,9 @@ _EXPLICIT = {
     "hpg_hydro": r"H_{p,\mathrm{hydro}}",
     "hpg_grad": r"H_{p,\nabla}",
     "tau500": r"\tau_{500}",
+    "keparb": r"\mathcal{K}",
+    "taurec3d": r"\tau_{\mathrm{rec,3D}}",
+    "taudif3d": r"\tau_{\mathrm{dif,3D}}",
 }
 
 
@@ -183,6 +188,10 @@ def latex_varname(name: str) -> str:
     Unknown names deliberately fall back to a roman rendering of the canonical
     identifier instead of guessing a physical meaning.
     """
+    source = _ABSOLUTE_SOURCES.get(name)
+    if source is not None:
+        source_label = latex_varname(source)[1:-1]
+        return rf"$\left|{source_label}\right|$"
     if name in _EXPLICIT:
         body = _EXPLICIT[name]
     elif name in {f"n{i}" for i in range(1, 7)}:

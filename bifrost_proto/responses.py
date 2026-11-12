@@ -29,7 +29,9 @@ def _uniform_axis_info(axis):
     """
     axis = np.asarray(axis, dtype=np.float64)
     if axis.ndim != 1 or axis.size < 2:
-        raise ValueError("Response axis must be one-dimensional with at least two points")
+        raise ValueError(
+            "Response axis must be one-dimensional with at least two points"
+        )
 
     delta = np.diff(axis)
     if not np.all(delta > 0.0):
@@ -67,24 +69,14 @@ def _uniform_response_emissivity_flat(
         ne = electron_density[i]
         nh = hydrogen_density[i]
 
-        if (
-            not np.isfinite(t)
-            or not np.isfinite(ne)
-            or t <= 0.0
-            or ne <= 0.0
-        ):
+        if not np.isfinite(t) or not np.isfinite(ne) or t <= 0.0 or ne <= 0.0:
             out[i] = ne * nh * fill_value
             continue
 
         lt = np.log10(t)
         ln = np.log10(ne)
 
-        if (
-            lt < logt0
-            or lt > logt_max
-            or ln < logne0
-            or ln > logne_max
-        ):
+        if lt < logt0 or lt > logt_max or ln < logne0 or ln > logne_max:
             out[i] = ne * nh * fill_value
             continue
 
@@ -145,24 +137,14 @@ def _uniform_response_emissivity_strided(
                 ne = electron_density[i, j, k]
                 nh = hydrogen_density[i, j, k]
 
-                if (
-                    not np.isfinite(t)
-                    or not np.isfinite(ne)
-                    or t <= 0.0
-                    or ne <= 0.0
-                ):
+                if not np.isfinite(t) or not np.isfinite(ne) or t <= 0.0 or ne <= 0.0:
                     out[i, j, k] = ne * nh * fill_value
                     continue
 
                 lt = np.log10(t)
                 ln = np.log10(ne)
 
-                if (
-                    lt < logt0
-                    or lt > logt_max
-                    or ln < logne0
-                    or ln > logne_max
-                ):
+                if lt < logt0 or lt > logt_max or ln < logne0 or ln > logne_max:
                     out[i, j, k] = ne * nh * fill_value
                     continue
 
@@ -190,7 +172,6 @@ def _uniform_response_emissivity_strided(
                     + fn * ft * q11
                 )
                 out[i, j, k] = ne * nh * np.float32(g)
-
 
 
 INSTRUMENT_RESPONSE_NAMES = (
@@ -288,12 +269,20 @@ class InstrumentResponseTable:
                 f"Response metadata name {meta_name!r} does not match requested {self.name!r}"
             )
 
-        self.logt = np.asarray(np.load(self.files.logt, mmap_mode="r", allow_pickle=False), dtype=np.float64)
-        self.logne = np.asarray(np.load(self.files.logne, mmap_mode="r", allow_pickle=False), dtype=np.float64)
+        self.logt = np.asarray(
+            np.load(self.files.logt, mmap_mode="r", allow_pickle=False),
+            dtype=np.float64,
+        )
+        self.logne = np.asarray(
+            np.load(self.files.logne, mmap_mode="r", allow_pickle=False),
+            dtype=np.float64,
+        )
         self.table = np.load(self.files.table, mmap_mode="r", allow_pickle=False)
 
         if self.logt.ndim != 1 or self.logne.ndim != 1:
-            raise ValueError("Response logt.npy and logne.npy must both be one-dimensional")
+            raise ValueError(
+                "Response logt.npy and logne.npy must both be one-dimensional"
+            )
         if self.logt.size < 2 or self.logne.size < 2:
             raise ValueError("Response axes must each contain at least two points")
         if not np.all(np.diff(self.logt) > 0.0):
@@ -400,7 +389,9 @@ class InstrumentResponseTable:
         are non-positive, non-finite, or outside the response grid receive the
         response-specific ``fill_value`` from ``metadata.json``.
         """
-        temperature, electron_density = np.broadcast_arrays(temperature, electron_density)
+        temperature, electron_density = np.broadcast_arrays(
+            temperature, electron_density
+        )
         out = np.full(temperature.shape, self.fill_value, dtype=np.float64)
 
         valid_input = (

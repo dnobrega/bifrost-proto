@@ -63,7 +63,10 @@ def test_info_pg_reports_aux_source_for_bifrost_p(tmp_path):
 
     shape = (n, n, n)
     snap = np.memmap(
-        tmp_path / f"{root}.snap", dtype="<f4", mode="w+", order="F",
+        tmp_path / f"{root}.snap",
+        dtype="<f4",
+        mode="w+",
+        order="F",
         shape=shape + (8,),
     )
     snap[...] = 1.0
@@ -71,7 +74,10 @@ def test_info_pg_reports_aux_source_for_bifrost_p(tmp_path):
     del snap
 
     aux = np.memmap(
-        tmp_path / f"{root}.aux", dtype="<f4", mode="w+", order="F",
+        tmp_path / f"{root}.aux",
+        dtype="<f4",
+        mode="w+",
+        order="F",
         shape=shape + (1,),
     )
     aux[..., 0] = 7.0

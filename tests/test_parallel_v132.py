@@ -39,9 +39,7 @@ def test_pointwise_strided_single_plane_paths_preserve_values_without_input_copi
     expected_norm = np.sqrt(ax * ax + ay * ay + az * az)
     np.testing.assert_allclose(norm, expected_norm, rtol=2e-7, atol=2e-7)
 
-    spz = quantities._ideal_poynting_component_arrays(
-        ax, ay, az, bx, by, bz, 2
-    )
+    spz = quantities._ideal_poynting_component_arrays(ax, ay, az, bx, by, bz, 2)
     expected_spz = az * (bx * bx + by * by) - bz * (ax * bx + ay * by)
     np.testing.assert_allclose(spz, expected_spz, rtol=3e-7, atol=3e-7)
 
@@ -80,12 +78,8 @@ def test_xy_stagger_operators_accept_one_plane_after_collapsing_yz_parallelism()
 
     # The point of this regression is the nz=1 execution path. Existing exact
     # stagger tests cover the legacy arithmetic itself.
-    xup = stagger.apply_operator(
-        "xup", f, x, xf, spacing=1.0
-    )
-    yup = stagger.apply_operator(
-        "yup", f, y, yf, spacing=1.0
-    )
+    xup = stagger.apply_operator("xup", f, x, xf, spacing=1.0)
+    yup = stagger.apply_operator("yup", f, y, yf, spacing=1.0)
 
     assert xup.shape == f.shape
     assert yup.shape == f.shape

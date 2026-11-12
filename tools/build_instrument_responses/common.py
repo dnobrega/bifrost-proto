@@ -47,7 +47,11 @@ def write_response(output_root, name, table, logne, logt, metadata):
     target.mkdir(parents=True, exist_ok=True)
 
     table, logne, logt = canonicalize_table(table, logne, logt)
-    np.save(target / "table.npy", np.asfortranarray(table, dtype=np.float64), allow_pickle=False)
+    np.save(
+        target / "table.npy",
+        np.asfortranarray(table, dtype=np.float64),
+        allow_pickle=False,
+    )
     np.save(target / "logne.npy", logne.astype(np.float64), allow_pickle=False)
     np.save(target / "logt.npy", logt.astype(np.float64), allow_pickle=False)
 
@@ -71,7 +75,9 @@ def readsav_response(path):
     try:
         from scipy.io import readsav
     except ImportError as exc:
-        raise RuntimeError("scipy is required to convert legacy IDL .sav tables") from exc
+        raise RuntimeError(
+            "scipy is required to convert legacy IDL .sav tables"
+        ) from exc
 
     sav = readsav(path, python_dict=True, verbose=False)
     lower = {str(k).lower(): v for k, v in sav.items()}
@@ -91,7 +97,9 @@ def load_vector(path, *, sav_variable=None):
         try:
             from scipy.io import readsav
         except ImportError as exc:
-            raise RuntimeError("scipy is required to read IDL .sav helper arrays") from exc
+            raise RuntimeError(
+                "scipy is required to read IDL .sav helper arrays"
+            ) from exc
         payload = readsav(path, python_dict=True, verbose=False)
         lower = {str(k).lower(): v for k, v in payload.items()}
         if sav_variable is not None:
@@ -102,7 +110,9 @@ def load_vector(path, *, sav_variable=None):
         else:
             arrays = [v for v in lower.values() if np.asarray(v).ndim >= 1]
             if len(arrays) != 1:
-                raise ValueError("Specify --nh-var when the .sav contains more than one array")
+                raise ValueError(
+                    "Specify --nh-var when the .sav contains more than one array"
+                )
             value = arrays[0]
     else:
         value = np.loadtxt(path)

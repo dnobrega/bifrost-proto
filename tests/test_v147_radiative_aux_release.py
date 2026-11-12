@@ -34,8 +34,11 @@ def sample_aux(tmp_path):
     )
     # r=2, e=12, 6 remaining native snap fields.
     snap = np.memmap(
-        tmp_path / f"{name}.snap", dtype="<f4", mode="w+",
-        order="F", shape=(n, n, n, 8),
+        tmp_path / f"{name}.snap",
+        dtype="<f4",
+        mode="w+",
+        order="F",
+        shape=(n, n, n, 8),
     )
     snap[...] = 0
     snap[..., 0] = 2
@@ -43,8 +46,11 @@ def sample_aux(tmp_path):
     snap.flush()
     del snap
     aux = np.memmap(
-        tmp_path / f"{name}.aux", dtype="<f4", mode="w+",
-        order="F", shape=(n, n, n, 2),
+        tmp_path / f"{name}.aux",
+        dtype="<f4",
+        mode="w+",
+        order="F",
+        shape=(n, n, n, 2),
     )
     aux[..., 0] = -4
     aux[..., 1] = 6
@@ -57,7 +63,8 @@ def sample_aux(tmp_path):
 def test_native_aux_signs_derived_rates_and_timescales(sample_aux):
     dd, _ = sample_aux
     for name, rate, rate_over_r, tau in (
-        ("qrad", -4, -2, 3), ("qgenrad", 6, 3, 2),
+        ("qrad", -4, -2, 3),
+        ("qgenrad", 6, 3, 2),
     ):
         assert dd.info(name, 0)["source"] == "aux"
         assert dd.info(name, 0)["available"]
@@ -114,12 +121,15 @@ def test_registry_presets_latex_and_los():
             assert PLOT_PRESETS[prefix + suffix] == PLOT_PRESETS[analog]
         assert PLOT_PRESETS["tau" + prefix] == PLOT_PRESETS["tauqspitz"]
         assert GLOBAL_REGISTRY[prefix].getter is None
-        for name, unit_type in ((prefix, "energy_rate_density"),
-                                (prefix + "or", "specific_energy_rate"),
-                                ("tau" + prefix, "time")):
+        for name, unit_type in (
+            (prefix, "energy_rate_density"),
+            (prefix + "or", "specific_energy_rate"),
+            ("tau" + prefix, "time"),
+        ):
             assert GLOBAL_REGISTRY[name].unit_type == unit_type
             assert latex_varname(name).startswith("$")
     from test_v144_plot_presets_colormaps import DummyData
+
     dd = DummyData()
     cmap, norm = get_plot_preset(dd, "qrad")
     assert cmap == "RdBu_r" and isinstance(norm, SymLogNorm)
@@ -138,11 +148,13 @@ def test_public_release_metadata():
         assert (repo / filename).is_file()
     assert "BSD 3-Clause" in (repo / "LICENSE").read_text()
     from bifrost_proto import __version__
+
     assert f'version: "{__version__}"' in (repo / "CITATION.cff").read_text()
 
 
 def test_plot_new_radiative_source_uses_default_divergent_preset(sample_aux):
     import matplotlib
+
     matplotlib.use("Agg", force=True)
     import matplotlib.pyplot as plt
 

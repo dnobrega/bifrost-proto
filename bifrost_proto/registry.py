@@ -100,7 +100,9 @@ GLOBAL_REGISTRY = VariableRegistry()
 def _require_description(name: str, description: str | None) -> str:
     """Validate and normalize mandatory official-variable descriptions."""
     if description is None or not str(description).strip():
-        raise ValueError(f"Official variable {name!r} must define a non-empty description")
+        raise ValueError(
+            f"Official variable {name!r} must define a non-empty description"
+        )
     return str(description).strip()
 
 
@@ -185,8 +187,7 @@ def register_vector(
         if len(descriptions) != 3:
             raise ValueError("descriptions must contain three entries")
         descriptions = tuple(
-            _require_description(name, desc)
-            for name, desc in zip(names, descriptions)
+            _require_description(name, desc) for name, desc in zip(names, descriptions)
         )
 
     if storage_names is None:
@@ -202,13 +203,17 @@ def register_vector(
         if len(aliases) != 3:
             raise ValueError("aliases must contain three component entries")
         aliases = tuple(
-            (item,) if isinstance(item, str) else tuple(item)
-            for item in aliases
+            (item,) if isinstance(item, str) else tuple(item) for item in aliases
         )
 
-    for name, location, component, storage_name, component_aliases, component_description in zip(
-        names, locations, "xyz", storage_names, aliases, descriptions
-    ):
+    for (
+        name,
+        location,
+        component,
+        storage_name,
+        component_aliases,
+        component_description,
+    ) in zip(names, locations, "xyz", storage_names, aliases, descriptions):
         GLOBAL_REGISTRY.register(
             name,
             location=location,

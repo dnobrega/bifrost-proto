@@ -93,7 +93,7 @@ def main():
     print(
         f"mode={args.mode} output={args.output} n={args.n} order={args.order} "
         f"elapsed_s={elapsed:.6f} baseline_mib={baseline:.1f} "
-        f"peak_mib={peak:.1f} delta_peak_mib={peak-baseline:.1f} "
+        f"peak_mib={peak:.1f} delta_peak_mib={peak - baseline:.1f} "
         f"checksum={float(result.flat[result.size // 2]):.8g}"
     )
 

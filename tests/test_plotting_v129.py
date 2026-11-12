@@ -54,12 +54,14 @@ def test_plot_uses_registered_face_coordinates():
         y = np.asarray(dd.get_y(), dtype=float)
         zf = np.asarray(dd.get_zf(units="solar"), dtype=float)
         zf_uniform = np.linspace(zf[0], zf[-1], zf.size)
-        expected = np.array([
-            y[0] - 0.5 * (y[1] - y[0]),
-            y[-1] + 0.5 * (y[-1] - y[-2]),
-            zf_uniform[0] - 0.5 * (zf_uniform[1] - zf_uniform[0]),
-            zf_uniform[-1] + 0.5 * (zf_uniform[-1] - zf_uniform[-2]),
-        ])
+        expected = np.array(
+            [
+                y[0] - 0.5 * (y[1] - y[0]),
+                y[-1] + 0.5 * (y[-1] - y[-2]),
+                zf_uniform[0] - 0.5 * (zf_uniform[1] - zf_uniform[0]),
+                zf_uniform[-1] + 0.5 * (zf_uniform[-1] - zf_uniform[-2]),
+            ]
+        )
         np.testing.assert_allclose(extent, expected)
     finally:
         plt.close(fig)
@@ -94,7 +96,11 @@ def test_plot_external_axes_preserve_return_contract():
     try:
         for ax, var in zip(axes, ("r", "bz")):
             fig_out, ax_out, im = dd.plot(
-                var, 0, y=float(dd.get_y()[7]), ax=ax, cbar=True,
+                var,
+                0,
+                y=float(dd.get_y()[7]),
+                ax=ax,
+                cbar=True,
             )
             assert fig_out is fig and ax_out is ax
             assert im.axes is ax
@@ -115,23 +121,34 @@ def test_plot_contour_uses_same_roi_and_its_own_stagger_grid(monkeypatch):
     }
     captured = {}
     from matplotlib.axes import Axes
+
     old_contour = Axes.contour
 
     def record_contour(self, xx, zz, values, **kwargs):
-        captured.update(x=np.asarray(xx), z=np.asarray(zz),
-                        values=np.asarray(values), kwargs=kwargs)
+        captured.update(
+            x=np.asarray(xx), z=np.asarray(zz), values=np.asarray(values), kwargs=kwargs
+        )
         return old_contour(self, xx, zz, values, **kwargs)
 
     monkeypatch.setattr(Axes, "contour", record_contour)
     fig, ax, _ = dd.plot(
-        "r", 0, **selections, cbar=False,
-        contours={"var": "bz", "centered": False, "levels": [1e-3, 2e-3],
-                  "colors": "white", "linewidths": 0.8},
+        "r",
+        0,
+        **selections,
+        cbar=False,
+        contours={
+            "var": "bz",
+            "centered": False,
+            "levels": [1e-3, 2e-3],
+            "colors": "white",
+            "linewidths": 0.8,
+        },
     )
     try:
         expected = dd.get_var("bz", 0, **selections, uniform_z=True)
-        gx, _, gz = dd.get_grid(location=dd.get_location("bz"),
-                                **selections, uniform_z=True)
+        gx, _, gz = dd.get_grid(
+            location=dd.get_location("bz"), **selections, uniform_z=True
+        )
         np.testing.assert_allclose(captured["values"], expected.T)
         np.testing.assert_allclose(captured["x"], gx)
         np.testing.assert_allclose(captured["z"], gz)
@@ -164,20 +181,36 @@ def test_plot_all_three_planes_with_crop():
     dd._meta_cache[0].params["tsnap"] = 1.5
     x, y, z = dd.get_grid()
     selections = [
-        {"z": float(z[7]), "x": slice(float(x[4]), float(x[14])),
-         "y": slice(float(y[5]), float(y[16]))},
-        {"y": float(y[7]), "x": slice(float(x[4]), float(x[14])),
-         "z": slice(float(z[5]), float(z[16]))},
-        {"x": float(x[7]), "y": slice(float(y[4]), float(y[14])),
-         "z": slice(float(z[5]), float(z[16]))},
+        {
+            "z": float(z[7]),
+            "x": slice(float(x[4]), float(x[14])),
+            "y": slice(float(y[5]), float(y[16])),
+        },
+        {
+            "y": float(y[7]),
+            "x": slice(float(x[4]), float(x[14])),
+            "z": slice(float(z[5]), float(z[16])),
+        },
+        {
+            "x": float(x[7]),
+            "y": slice(float(y[4]), float(y[14])),
+            "z": slice(float(z[5]), float(z[16])),
+        },
     ]
     for sel in selections:
         fig, ax, im = dd.plot("r", 0, **sel, cbar=False)
         try:
-            np.testing.assert_allclose(im.get_array(), dd.get_var(
-                "r", 0, **sel, uniform_z=(sel.get("z") is not None and
-                                                  isinstance(sel["z"], slice)),
-            ).T)
+            np.testing.assert_allclose(
+                im.get_array(),
+                dd.get_var(
+                    "r",
+                    0,
+                    **sel,
+                    uniform_z=(
+                        sel.get("z") is not None and isinstance(sel["z"], slice)
+                    ),
+                ).T,
+            )
         finally:
             plt.close(fig)
 
@@ -194,9 +227,14 @@ def test_plot_low_memory_forwarded(monkeypatch):
         return original_get_var(var, snap, **kwargs)
 
     monkeypatch.setattr(dd, "get_var", spy)
-    fig, ax, im = dd.plot("r", 0, y=float(dd.get_y()[6]),
-                          contours={"var": "bz", "levels": 4},
-                          low_memory=True, cbar=False)
+    fig, ax, im = dd.plot(
+        "r",
+        0,
+        y=float(dd.get_y()[6]),
+        contours={"var": "bz", "levels": 4},
+        low_memory=True,
+        cbar=False,
+    )
     try:
         assert seen == [True, True]
     finally:

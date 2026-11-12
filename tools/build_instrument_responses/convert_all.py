@@ -36,8 +36,7 @@ XRT = {
 }
 
 EUI174_FITS = (
-    "goft_hri_174_sun_coronal_1992_feldman_ext."
-    "abund_chianti.ioneq_synthetic.fits"
+    "goft_hri_174_sun_coronal_1992_feldman_ext.abund_chianti.ioneq_synthetic.fits"
 )
 
 REQUIRED_OUTPUTS = {"table.npy", "logt.npy", "logne.npy", "metadata.json"}
@@ -84,7 +83,9 @@ def _verify(output_root: Path, names):
         if missing:
             problems.append(f"{name}: missing {sorted(missing)}")
     if problems:
-        raise RuntimeError("Incomplete response conversion:\n  " + "\n  ".join(problems))
+        raise RuntimeError(
+            "Incomplete response conversion:\n  " + "\n  ".join(problems)
+        )
 
 
 def main():
@@ -95,7 +96,9 @@ def main():
             "the Solar Orbiter/EUI HRI 174 response."
         )
     )
-    parser.add_argument("source", type=Path, help="directory containing the legacy response files")
+    parser.add_argument(
+        "source", type=Path, help="directory containing the legacy response files"
+    )
     parser.add_argument(
         "--output-root",
         type=Path,
@@ -131,37 +134,52 @@ def main():
     print(f"Output directory : {output_root}")
 
     for name, filename in AIA.items():
-        _run([
-            sys.executable,
-            HERE / "convert_aia.py",
-            source / filename,
-            "--name", name,
-            "--output-root", output_root,
-        ])
+        _run(
+            [
+                sys.executable,
+                HERE / "convert_aia.py",
+                source / filename,
+                "--name",
+                name,
+                "--output-root",
+                output_root,
+            ]
+        )
 
     for name, filename in XRT.items():
-        _run([
-            sys.executable,
-            HERE / "convert_xrt.py",
-            source / filename,
-            "--name", name,
-            "--output-root", output_root,
-        ])
+        _run(
+            [
+                sys.executable,
+                HERE / "convert_xrt.py",
+                source / filename,
+                "--name",
+                name,
+                "--output-root",
+                output_root,
+            ]
+        )
 
     converted = list(AIA) + list(XRT)
 
     if include_eui:
-        _run([
-            sys.executable,
-            HERE / "convert_eui.py",
-            source / EUI174_FITS,
-            "--nh-over-ne", nh_over_ne,
-            "--nh-var", args.nh_var,
-            "--output-root", output_root,
-        ])
+        _run(
+            [
+                sys.executable,
+                HERE / "convert_eui.py",
+                source / EUI174_FITS,
+                "--nh-over-ne",
+                nh_over_ne,
+                "--nh-var",
+                args.nh_var,
+                "--output-root",
+                output_root,
+            ]
+        )
         converted.append("eui174")
     else:
-        print("\nEUI 174 skipped: pass --nh-over-ne to reproduce the legacy proton_dens(T) normalization.")
+        print(
+            "\nEUI 174 skipped: pass --nh-over-ne to reproduce the legacy proton_dens(T) normalization."
+        )
 
     _verify(output_root, converted)
     print("\nAll requested response tables converted successfully:")

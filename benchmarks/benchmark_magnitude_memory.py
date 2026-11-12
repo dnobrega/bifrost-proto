@@ -11,6 +11,7 @@ python benchmarks/benchmark_magnitude_memory.py hypot --n 512 --order F
 python benchmarks/benchmark_magnitude_memory.py numba --n 512 --order F
 python benchmarks/benchmark_magnitude_memory.py numba --n 512 --order F --stride 2
 """
+
 from __future__ import annotations
 
 import argparse
@@ -44,7 +45,9 @@ def _warm_numba(order, stride):
         np.full(shape, value, dtype=np.float32, order=order)
         for value in (1.25, -2.5, 4.0)
     )
-    parts = bases if stride == 1 else tuple(a[::stride, ::stride, ::stride] for a in bases)
+    parts = (
+        bases if stride == 1 else tuple(a[::stride, ::stride, ::stride] for a in bases)
+    )
     _norm_arrays(parts)
 
 
@@ -82,9 +85,9 @@ def main():
     if args.stride == 1:
         x, y, z = xb, yb, zb
     else:
-        x = xb[::args.stride, ::args.stride, ::args.stride]
-        y = yb[::args.stride, ::args.stride, ::args.stride]
-        z = zb[::args.stride, ::args.stride, ::args.stride]
+        x = xb[:: args.stride, :: args.stride, :: args.stride]
+        y = yb[:: args.stride, :: args.stride, :: args.stride]
+        z = zb[:: args.stride, :: args.stride, :: args.stride]
 
     baseline = maxrss_mib()
     t0 = time.perf_counter()
@@ -103,7 +106,7 @@ def main():
     print(
         f"mode={args.mode} n={args.n} order={args.order} stride={args.stride} "
         f"shape={x.shape} elapsed_s={elapsed:.6f} baseline_mib={baseline:.1f} "
-        f"peak_mib={peak:.1f} delta_peak_mib={peak-baseline:.1f} "
+        f"peak_mib={peak:.1f} delta_peak_mib={peak - baseline:.1f} "
         f"checksum={checksum:.8g}"
     )
 

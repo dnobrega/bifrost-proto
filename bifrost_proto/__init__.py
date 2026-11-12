@@ -10,6 +10,7 @@ from .version import __version__
 def register_colormaps():
     """Register Bifrost's terrain and instrument colormaps in Matplotlib."""
     from .colormaps import register_colormaps as _register
+
     return _register()
 
 

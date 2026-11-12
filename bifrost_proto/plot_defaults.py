@@ -1,6 +1,6 @@
 """User-approved plot defaults, separate from physical variable metadata.
 
-The 169 catalog entries are solar-unit presets. The current reader registry
+The catalog entries are solar-unit presets. The current reader registry
 resolves aliases, and optional physical-unit conversion changes the norm limits
 without changing the underlying variable data. Passing a user ``cmap`` or
 ``norm`` always overrides that field. Unknown/custom variables keep Matplotlib
@@ -11,16 +11,47 @@ from __future__ import annotations
 
 from matplotlib.colors import CenteredNorm, LogNorm, Normalize, SymLogNorm, TwoSlopeNorm
 
-from ._plot_preset_data import PLOT_PRESETS
+from ._plot_preset_data import PLOT_PRESETS as _BASE_PRESETS
+from .quantities import _ABSOLUTE_SOURCES
+
+
+def _absolute_preset(name):
+    """Use the signed preset's threshold and largest magnitude as log limits."""
+    _, low, high, threshold, _, _ = _BASE_PRESETS[name]
+    maximum = max(abs(low), abs(high))
+    minimum = threshold if threshold is not None else maximum * 1e-3
+    return "LogNorm", minimum, maximum, None, None, "jet"
+
+
+PLOT_PRESETS = {
+    **_BASE_PRESETS,
+    **{name: _absolute_preset(source) for name, source in _ABSOLUTE_SOURCES.items()},
+}
+
+# Non-negative quantities whose LOS integrals autoscale logarithmically.
+_LOG_AUTOSCALE_LOS = frozenset(_ABSOLUTE_SOURCES) | {"keparb", "taurec3d", "taudif3d"}
+
 
 # Preset palettes with a meaningful neutral midpoint. Only use an automatic
 # zero-centered range when the *quantity is signed*, not for a positive quantity
 # that happens to use a diverging palette (such as beta).
-_DIVERGENT_CMAPS = frozenset({
-    "RdBu", "BrBG", "PiYG", "PRGn", "PuOr", "RdGy", "RdYlBu",
-    "RdYlGn", "Spectral", "bwr", "seismic", "coolwarm",
-    "divergent_terrain",
-})
+_DIVERGENT_CMAPS = frozenset(
+    {
+        "RdBu",
+        "BrBG",
+        "PiYG",
+        "PRGn",
+        "PuOr",
+        "RdGy",
+        "RdYlBu",
+        "RdYlGn",
+        "Spectral",
+        "bwr",
+        "seismic",
+        "coolwarm",
+        "divergent_terrain",
+    }
+)
 
 # LOS instrument values are integrated DN s^-1 pix^-1, not local emissivity.
 INSTRUMENT_LOS = {"aia": (1.0, 2e4), "eui": (1.0, 2e4), "xrt": (0.1, 100.0)}
@@ -59,9 +90,9 @@ def _factor(data, var, units, *, los):
 def get_plot_preset(data, var, *, units="solar", los=None):
     """Return (colormap-name, Normalize-or-None) for a registered variable.
 
-    No snapshot values are read. For non-instrumental LOS, keep automatic
-    scaling. Signed quantities with diverging preset colormaps use CenteredNorm
-    so the neutral midpoint always represents zero.
+    No snapshot values are read. LOS integrals of absolute values and 3-D
+    reconnection diagnostics autoscale logarithmically. Signed quantities with
+    diverging preset colormaps use CenteredNorm for LOS integrals.
     """
     registry = getattr(data, "registry", None)
     canonical = registry.resolve(var) if registry is not None else var
@@ -77,6 +108,8 @@ def get_plot_preset(data, var, *, units="solar", los=None):
         elif canonical.startswith("xrt_"):
             low, high = INSTRUMENT_LOS["xrt"]
             entry = ("LogNorm", low, high, None, None, cmap)
+        elif canonical in _LOG_AUTOSCALE_LOS:
+            return cmap, LogNorm()
         else:
             base = cmap.removesuffix("_r")
             if entry[1] < 0 < entry[2] and base in _DIVERGENT_CMAPS:
@@ -86,8 +119,12 @@ def get_plot_preset(data, var, *, units="solar", los=None):
             return cmap, None
     if units.lower() != "solar":
         ratio = _factor(data, canonical, units, los=los)
-        entry = (entry[0], entry[1] * ratio, entry[2] * ratio,
-                 entry[3] * ratio if entry[3] is not None else None,
-                 entry[4] * ratio if entry[4] is not None else None,
-                 entry[5])
+        entry = (
+            entry[0],
+            entry[1] * ratio,
+            entry[2] * ratio,
+            entry[3] * ratio if entry[3] is not None else None,
+            entry[4] * ratio if entry[4] is not None else None,
+            entry[5],
+        )
     return cmap, _limits(canonical, entry)

@@ -15,7 +15,9 @@ def _expected(*parts):
 @pytest.mark.parametrize("order", ["C", "F"])
 @pytest.mark.parametrize("dtype", [np.float32, np.float64])
 @pytest.mark.parametrize("ncomp", [2, 3])
-def test_norm_arrays_contiguous_matches_numpy_without_modifying_inputs(order, dtype, ncomp):
+def test_norm_arrays_contiguous_matches_numpy_without_modifying_inputs(
+    order, dtype, ncomp
+):
     rng = np.random.default_rng(20260918)
     parts = tuple(
         np.array(rng.normal(size=(17, 15, 13)), dtype=dtype, order=order)

@@ -28,7 +28,9 @@ def test_uniform_z_numba_matches_vectorized_reference_c_and_f():
     z = z[0] + (z - z[0]) ** 1.15
 
     for order in ("C", "F"):
-        value = np.array(rng.standard_normal((11, 13, 17)), dtype=np.float32, order=order)
+        value = np.array(
+            rng.standard_normal((11, 13, 17)), dtype=np.float32, order=order
+        )
         expected, z_expected = _uniform_z_reference(value, ("x", "y", "z"), z)
         got, z_got = BifrostData._uniformize_z(value, ("x", "y", "z"), z)
 

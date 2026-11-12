@@ -19,7 +19,9 @@ from test_engine import make_data
         ("z", "uz", "get_zf"),
     ],
 )
-def test_nearest_uses_nearest_staggered_sample_at_center_boundary(br, axis, var, coord_getter):
+def test_nearest_uses_nearest_staggered_sample_at_center_boundary(
+    br, axis, var, coord_getter
+):
     dd = make_data(n=24)
     centers = getattr(dd, f"get_{axis}")(br=br)
     faces = getattr(dd, coord_getter)(br=br)
@@ -27,7 +29,9 @@ def test_nearest_uses_nearest_staggered_sample_at_center_boundary(br, axis, var,
     target = float(centers[edge])
     nearest_i = int(np.argmin(np.abs(faces - target)))
 
-    actual = dd.get_var(var, 0, br=br, units="bifrost", method="nearest", **{axis: target})
+    actual = dd.get_var(
+        var, 0, br=br, units="bifrost", method="nearest", **{axis: target}
+    )
     expected = dd.get_var(var, 0, br=br, units="bifrost", **{f"i{axis}": nearest_i})
     np.testing.assert_array_equal(actual, expected)
 
