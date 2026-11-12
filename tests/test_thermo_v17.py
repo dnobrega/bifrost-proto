@@ -1,9 +1,9 @@
 import numpy as np
+from test_engine import ArrayData, make_data
+from test_quantities_v14 import interior, make_constant_data
 
 from bifrost_proto.eos import EOSTable
 from bifrost_proto.registry import GLOBAL_REGISTRY
-from test_engine import ArrayData, make_data
-from test_quantities_v14 import make_constant_data, interior
 
 
 class IdealGasEOS:

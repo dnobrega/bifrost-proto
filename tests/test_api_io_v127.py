@@ -6,9 +6,9 @@ import os
 
 import numpy as np
 import pytest
+from test_engine import make_data
 
 from bifrost_proto import BifrostData
-from test_engine import make_data
 
 
 def _write_mesh(path, x, y, z):

@@ -37,7 +37,6 @@ class FakeData:
         units="solar",
         low_memory=None,
     ):
-        cuts = [axis for axis, val in (("x", x), ("y", y), ("z", z)) if val is not None]
         assert (
             sum(
                 not isinstance(val, slice)

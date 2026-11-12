@@ -133,11 +133,11 @@ def test_getvar_br_returns_native_bifrost_bytes(tmp_path):
 
 
 def test_getvar_br_and_public_stagger_share_native_frame():
-    from bifrost_proto.core import EvaluationContext
-    from bifrost_proto.selection import Selection
-
     # Reuse the synthetic in-memory reader from test_engine without importing it.
     from test_engine import make_data
+
+    from bifrost_proto.core import EvaluationContext
+    from bifrost_proto.selection import Selection
 
     dd = make_data()
     bx_br = dd.get_var("bx", 0, units="bifrost", br=True)

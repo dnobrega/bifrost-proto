@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from test_v133_safety_and_wrapped import _binary_run
 
 from bifrost_proto import BifrostData
 from bifrost_proto.selection import Selection
-from test_v133_safety_and_wrapped import _binary_run
 
 
 def test_periodic_expand_preserves_unwrapped_child_for_wide_window():

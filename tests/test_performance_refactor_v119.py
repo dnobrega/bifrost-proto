@@ -1,7 +1,7 @@
 import numpy as np
+from test_engine import make_data
 
 from bifrost_proto import quantities
-from test_engine import make_data
 
 
 def test_getz_uniform_z_matches_full_domain_uniformization_grid():

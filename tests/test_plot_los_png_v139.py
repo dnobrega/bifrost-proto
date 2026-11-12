@@ -9,9 +9,9 @@ matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from test_engine import ArrayData, make_data
 
 from bifrost_proto.plotting import _colorbar_label, _integrated_unit_plain
-from test_engine import ArrayData, make_data
 
 
 def _data(n=16):
@@ -62,7 +62,7 @@ def test_center_integral_uses_nonuniform_z_widths_and_roi():
     z_slice = slice(float(z[3]), float(z[17]))
     widths = dd.get_dz1d(z=z_slice, units="solar")
     expected = 2.0e-7 * 1e8 * widths.sum()
-    fig, ax, im = dd.plot("r", 0, los="z", z=z_slice, cbar=False)
+    fig, _ax, im = dd.plot("r", 0, los="z", z=z_slice, cbar=False)
     try:
         np.testing.assert_allclose(im.get_array(), expected, rtol=5e-6)
         assert not np.isclose(expected, 2.0e-7 * (z[17] - z[3]) * 1e8)
@@ -89,7 +89,7 @@ def test_staggered_integral_uses_periodic_rectangle_on_xy_and_trapezoid_on_z():
             )
         else:
             expected = trapz(plane, x=positions, axis=axis)
-        fig, ax, im = dd.plot(var, 0, los=los, cbar=False)
+        fig, _ax, im = dd.plot(var, 0, los=los, cbar=False)
         try:
             np.testing.assert_allclose(im.get_array(), expected.T, rtol=1e-6, atol=1e-7)
         finally:
@@ -104,7 +104,7 @@ def test_los_roi_and_vertical_remesh_take_place_after_integral():
         "y": slice(float(y[2]), float(y[10])),
         "z": slice(float(z[3]), float(z[18])),
     }
-    fig, ax, im = dd.plot("r", 0, los="y", **selection, cbar=False)
+    fig, _ax, im = dd.plot("r", 0, los="y", **selection, cbar=False)
     try:
         raw = dd.get_var("r", 0, **selection, units="solar", uniform_z=False)
         widths = dd.get_dy1d(y=selection["y"])
@@ -142,7 +142,7 @@ def test_solar_Mm_inverse_conversion_is_numerically_consistent():
         return data._getvar("r", snap, selection, context)
 
     solar_gradient = dd.get_var("test_gradient", 0, units="solar")
-    fig, ax, im = dd.plot("test_gradient", 0, los="y", cbar=False)
+    fig, _ax, im = dd.plot("test_gradient", 0, los="y", cbar=False)
     try:
         expected = np.sum(solar_gradient, axis=1) * dd.get_dy()  # G / Mm * Mm = G
         np.testing.assert_allclose(im.get_array(), expected.T, rtol=1e-6)
@@ -167,7 +167,7 @@ def test_png_auto_path_dpi_and_overwrite_protection(tmp_path, monkeypatch):
     dd = _data(12)
     dd.fdir = str(tmp_path / "simulation")
     monkeypatch.chdir(tmp_path)
-    fig, ax, im = dd.plot(
+    fig, _ax, _im = dd.plot(
         "r", 0, los="y", x=slice(2, 8), png=True, cbar=False, figsize=(2, 2)
     )
     try:

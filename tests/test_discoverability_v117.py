@@ -41,8 +41,9 @@ def test_variables_searches_names_aliases_descriptions_and_unit_type():
 
 def test_info_pg_reports_aux_source_for_bifrost_p(tmp_path):
     import numpy as np
-    from bifrost_proto import BifrostData
     from test_io import write_mesh
+
+    from bifrost_proto import BifrostData
 
     n = 6
     root = "testrun_info_pg"

@@ -12,15 +12,16 @@ import numpy as np
 import pytest
 from matplotlib import colormaps
 from matplotlib.colors import LogNorm
+from test_v144_plot_presets_colormaps import DummyData
 
-from bifrost_proto import BifrostData  # noqa: F401 - populate registry
-from bifrost_proto import quantities
+from bifrost_proto import (
+    BifrostData,  # noqa: F401 - populate registry
+    quantities,
+)
 from bifrost_proto.movie import _new_partial_movie, _publish_movie
 from bifrost_proto.plot_defaults import get_plot_preset
 from bifrost_proto.registry import GLOBAL_REGISTRY
 from bifrost_proto.units import BifrostUnits
-from test_v144_plot_presets_colormaps import DummyData
-
 
 VELOCITY_COMPONENTS = (
     "u_x",

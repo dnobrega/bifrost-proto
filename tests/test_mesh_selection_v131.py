@@ -6,7 +6,6 @@ import inspect
 
 import numpy as np
 import pytest
-
 from test_engine import ArrayData, make_data
 
 

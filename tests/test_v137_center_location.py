@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from test_engine import make_data
 
 

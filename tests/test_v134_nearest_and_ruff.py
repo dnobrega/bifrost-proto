@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from test_engine import make_data
 
 import bifrost_proto
 from bifrost_proto.version import __version__ as source_version
-from test_engine import make_data
 
 
 @pytest.mark.parametrize("br", [False, True])

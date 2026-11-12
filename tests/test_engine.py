@@ -1,8 +1,7 @@
 import numpy as np
 
-from bifrost_proto.core import BifrostData, EvaluationContext, SnapshotMeta
-from bifrost_proto.registry import VariableRegistry, GLOBAL_REGISTRY
-from bifrost_proto.selection import Selection
+from bifrost_proto.core import BifrostData, SnapshotMeta
+from bifrost_proto.registry import GLOBAL_REGISTRY, VariableRegistry
 from bifrost_proto.units import BifrostUnits
 
 
@@ -238,6 +237,7 @@ def test_total_electric_field_is_stored_only_but_ideal_field_is_derived():
     dd = ArrayData(arrays, x, y, z)
 
     import pytest
+
     from bifrost_proto.core import UnknownVariableError
 
     with pytest.raises(UnknownVariableError):

@@ -3,7 +3,7 @@
 import numpy as np
 from numba import njit
 
-import bifrost_proto.quantities as quantities
+from bifrost_proto import quantities
 
 
 @njit(cache=True)

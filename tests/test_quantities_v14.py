@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
+from test_engine import ArrayData, make_data
 
 from bifrost_proto.core import UnknownVariableError
-from test_engine import ArrayData, make_data
 
 
 def make_constant_data(n=24):

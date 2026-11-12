@@ -4,6 +4,7 @@ Run from the repository root, for example:
     NUMBA_NUM_THREADS=16 python benchmarks/benchmark_thin_slab_parallel_v132.py
 """
 
+from functools import partial
 from time import perf_counter
 
 import numpy as np
@@ -36,8 +37,8 @@ def main():
 
         flat = tuple(quantities._flat_memory_view(a) for a in arrays)
         flat_out = quantities._flat_memory_view(out)
-        t_flat = timed(lambda: quantities._dot3_flat(*flat, flat_out))
-        t_rows = timed(lambda: quantities._dot3_native(ax, ay, az, bx, by, bz, out))
+        t_flat = timed(partial(quantities._dot3_flat, *flat, flat_out))
+        t_rows = timed(partial(quantities._dot3_native, ax, ay, az, bx, by, bz, out))
         print(
             f"512x512x{nz:<2d}: flat={1e3 * t_flat:8.3f} ms  "
             f"row-parallel={1e3 * t_rows:8.3f} ms"

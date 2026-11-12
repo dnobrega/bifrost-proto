@@ -1,9 +1,9 @@
 import numpy as np
 import pytest
+from test_engine import ArrayData
 
 from bifrost_proto.core import UnknownVariableError
 from bifrost_proto.units import BifrostUnits
-from test_engine import ArrayData
 
 
 def _interior(a):
@@ -108,7 +108,7 @@ def test_poynting_vector_signs_follow_public_physical_orientation():
 
 def test_poynting_subdomain_matches_full_domain():
     dd = make_poynting_data()
-    selection = dict(ix=slice(8, 18), iy=slice(9, 19), iz=slice(7, 17))
+    selection = {"ix": slice(8, 18), "iy": slice(9, 19), "iz": slice(7, 17)}
 
     for name in ("sp_z", "sp_ideal_z", "sp_ideal_emerg_z", "sp_ideal_shear_z"):
         full = dd.get_var(name, 0, units="bifrost", br=True)

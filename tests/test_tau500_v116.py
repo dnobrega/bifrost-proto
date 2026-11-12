@@ -1,7 +1,5 @@
 import numpy as np
-
 from test_engine import ArrayData
-
 
 HMINUS_SAHA = 1.03526e-16
 HMINUS_SIGMA_CM2 = 2.9256e-17

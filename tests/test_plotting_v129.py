@@ -9,7 +9,6 @@ matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import Normalize
-
 from test_engine import make_data
 
 
@@ -42,7 +41,7 @@ def test_plot_uses_registered_face_coordinates():
     dd = make_data(n=16)
     dd._meta_cache[0].params["tsnap"] = 0.0
 
-    fig, ax, im = dd.plot(
+    fig, _ax, im = dd.plot(
         "bz",
         0,
         x=float(dd.get_x()[6]),
@@ -77,7 +76,7 @@ def test_plot_roi_slices_read_only_selected_data():
         "x": slice(float(x[4]), float(x[16])),
         "z": slice(float(z[3]), float(z[15])),
     }
-    fig, ax, im = dd.plot("r", 0, **selection, cbar=False)
+    fig, _ax, im = dd.plot("r", 0, **selection, cbar=False)
     try:
         raw = dd.get_var("r", 0, **selection, uniform_z=True)
         cx, _, cz = dd.get_grid(**selection, uniform_z=True)
@@ -131,7 +130,7 @@ def test_plot_contour_uses_same_roi_and_its_own_stagger_grid(monkeypatch):
         return old_contour(self, xx, zz, values, **kwargs)
 
     monkeypatch.setattr(Axes, "contour", record_contour)
-    fig, ax, _ = dd.plot(
+    fig, _ax, _ = dd.plot(
         "r",
         0,
         **selections,
@@ -198,7 +197,7 @@ def test_plot_all_three_planes_with_crop():
         },
     ]
     for sel in selections:
-        fig, ax, im = dd.plot("r", 0, **sel, cbar=False)
+        fig, _ax, im = dd.plot("r", 0, **sel, cbar=False)
         try:
             np.testing.assert_allclose(
                 im.get_array(),
@@ -227,7 +226,7 @@ def test_plot_low_memory_forwarded(monkeypatch):
         return original_get_var(var, snap, **kwargs)
 
     monkeypatch.setattr(dd, "get_var", spy)
-    fig, ax, im = dd.plot(
+    fig, _ax, _im = dd.plot(
         "r",
         0,
         y=float(dd.get_y()[6]),

@@ -7,7 +7,6 @@ import argparse
 from pathlib import Path
 
 import numpy as np
-
 from common import canonicalize_table, load_vector, sha256sum, write_response
 
 

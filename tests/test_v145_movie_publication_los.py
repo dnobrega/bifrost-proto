@@ -15,12 +15,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from matplotlib.colors import CenteredNorm, LogNorm
+from test_engine import make_data
+from test_v144_plot_presets_colormaps import DummyData
 
 from bifrost_proto.colormaps import make_colormaps
 from bifrost_proto.movie import _new_partial_movie, _publish_movie
 from bifrost_proto.plot_defaults import get_plot_preset
-from test_engine import make_data
-from test_v144_plot_presets_colormaps import DummyData
 
 
 def test_colormaps_are_valid_with_warnings_as_errors():

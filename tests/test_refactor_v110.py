@@ -1,14 +1,14 @@
 import numpy as np
 import pytest
+from test_engine import ArrayData
 
-from bifrost_proto.core import EvaluationContext, UnknownVariableError
+from bifrost_proto.core import EvaluationContext
 from bifrost_proto.quantities import (
     _curl_component,
     _norm_arrays,
     _vector_divergence,
 )
 from bifrost_proto.selection import Selection
-from test_engine import ArrayData
 
 
 def _full(n):

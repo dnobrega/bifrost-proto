@@ -10,12 +10,12 @@ import matplotlib
 matplotlib.use("Agg", force=True)
 import numpy as np
 import pytest
+from test_engine import make_data
+from test_v142_review_fixes import _run
 
 from bifrost_proto import plotting
 from bifrost_proto.movie import movie
 from bifrost_proto.plotting import _integrated_plane
-from test_engine import make_data
-from test_v142_review_fixes import _run
 
 
 def test_los_slab_adapts_to_budget(monkeypatch):

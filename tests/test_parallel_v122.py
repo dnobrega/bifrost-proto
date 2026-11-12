@@ -2,10 +2,7 @@
 
 import numpy as np
 
-import bifrost_proto.core as core
-import bifrost_proto.eos as eos
-import bifrost_proto.quantities as quantities
-import bifrost_proto.responses as responses
+from bifrost_proto import core, eos, quantities, responses
 
 
 def _assert_parallel_no_fastmath(dispatcher):

@@ -2,10 +2,10 @@ import json
 from pathlib import Path
 
 import numpy as np
+from test_engine import make_data
 
 from bifrost_proto.core import AMU_CGS
 from bifrost_proto.responses import INSTRUMENT_RESPONSE_NAMES, InstrumentResponseTable
-from test_engine import make_data
 
 
 def write_tabparam(path):

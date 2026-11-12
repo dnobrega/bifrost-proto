@@ -2,9 +2,12 @@ import numpy as np
 
 from bifrost_proto import quantities
 
+_DEFAULT_GAMMA = np.float32(5.0 / 3.0)
+_DEFAULT_GRAV = np.float32(2.74)
+
 
 class DummyData:
-    def __init__(self, arrays, gamma=np.float32(5.0 / 3.0), grav=np.float32(2.74)):
+    def __init__(self, arrays, gamma=_DEFAULT_GAMMA, grav=_DEFAULT_GRAV):
         self.arrays = arrays
         self._gamma = gamma
         self._grav = grav
@@ -18,7 +21,6 @@ class DummyData:
             u_t = 1e2
 
         units = _Units()
-        params = {}
 
     def _meta(self, snap):
         m = self._Meta()

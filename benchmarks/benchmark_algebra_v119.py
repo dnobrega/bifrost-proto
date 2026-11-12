@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import time
+
 import numpy as np
 
 from bifrost_proto import quantities

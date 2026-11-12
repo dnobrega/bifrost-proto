@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-
 from test_engine import make_data
 
 
@@ -81,7 +80,7 @@ def test_uniform_z_keeps_f_order_for_full_public_cube():
 
 def test_orientation_dispatchers_are_parallel_without_fastmath():
     """The public-orientation kernels must stay parallel and IEEE-conservative."""
-    import bifrost_proto.core as core
+    from bifrost_proto import core
 
     for dispatcher in (core._orient_physical_3d_f, core._orient_physical_signed_3d_f):
         opts = dispatcher.targetoptions

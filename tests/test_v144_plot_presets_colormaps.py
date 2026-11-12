@@ -54,7 +54,7 @@ def test_user_corrections_and_alias():
 def test_instrument_local_los_norms():
     dd = DummyData()
     for var in ["aia94", "aia171", "aia304", "eui174", "xrt_cpoly"]:
-        cmap, norm = get_plot_preset(dd, var)
+        _cmap, norm = get_plot_preset(dd, var)
         assert isinstance(norm, LogNorm)
         assert (norm.vmin, norm.vmax) == (1e-8, 1e-4)
         _, los_norm = get_plot_preset(dd, var, los="z")
@@ -124,7 +124,7 @@ def test_real_plot_applies_and_overrides_presets():
 
     dd = make_data(n=12)
     y = float(dd.get_y()[5])
-    fig, ax, artist = dd.plot("r", 0, y=y, cbar=False, title=False)
+    fig, _ax, artist = dd.plot("r", 0, y=y, cbar=False, title=False)
     try:
         assert isinstance(artist.norm, LogNorm)
         assert artist.get_cmap().name == "terrain_r"
@@ -132,7 +132,7 @@ def test_real_plot_applies_and_overrides_presets():
         plt.close(fig)
 
     manual = Normalize(-7, 5)
-    fig, ax, artist = dd.plot(
+    fig, _ax, artist = dd.plot(
         "r", 0, y=y, norm=manual, cmap="red_terrain_r", cbar=False, title=False
     )
     try:

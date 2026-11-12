@@ -1,7 +1,7 @@
 """Regression tests for the v0.1.26 quantity-metadata cleanup."""
 
-from bifrost_proto.registry import GLOBAL_REGISTRY
 import bifrost_proto.quantities  # noqa: F401 -- populate the built-in registry
+from bifrost_proto.registry import GLOBAL_REGISTRY
 
 
 def _aliases_for(name):

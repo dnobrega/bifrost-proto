@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
+from test_engine import ArrayData
 
 import bifrost_proto.quantities as q
-from test_engine import ArrayData
 
 
 def _expected(*parts):

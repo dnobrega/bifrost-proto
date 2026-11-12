@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
+from test_engine import ArrayData
 
 from bifrost_proto.core import UnknownVariableError
-from test_engine import ArrayData
 
 
 def interior(a):

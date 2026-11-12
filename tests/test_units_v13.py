@@ -1,7 +1,8 @@
 import math
+
 import numpy as np
 
-from bifrost_proto.units import BifrostUnits, C_LIGHT
+from bifrost_proto.units import C_LIGHT, BifrostUnits
 
 
 def test_bifrost_units_are_derived_from_fundamental_units():

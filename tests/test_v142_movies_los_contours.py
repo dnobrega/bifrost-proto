@@ -12,11 +12,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from matplotlib.axes import Axes
-
-from bifrost_proto.plot_naming import _coordinate_label
-from bifrost_proto.movie import movie, _scan_output_path
-from bifrost_proto.plotting import _integrated_plane
 from test_engine import ArrayData, make_data
+
+from bifrost_proto.movie import _scan_output_path, movie
+from bifrost_proto.plot_naming import _coordinate_label
+from bifrost_proto.plotting import _integrated_plane
 
 
 def _data(n=18):
@@ -93,7 +93,7 @@ def test_centered_contours_use_center_coordinates(monkeypatch):
 def test_contour_default_aligns_with_centered_background(monkeypatch):
     dd = _data(20)
     _, yy, zz = dd.get_grid(location="center")
-    selection = dict(y=float(yy[9]), z=slice(float(zz[2]), float(zz[15])))
+    selection = {"y": float(yy[9]), "z": slice(float(zz[2]), float(zz[15]))}
     records = []
     real = Axes.contour
 
@@ -200,13 +200,13 @@ def test_movies_with_real_reader_and_overlay_or_stream(tmp_path, mode):
         return arr
 
     dd.get_var = track
-    options = dict(
-        dpi=60,
-        figsize=(3, 2),
-        cbar=False,
-        progress=False,
-        output=tmp_path / f"{mode}.mp4",
-    )
+    options = {
+        "dpi": 60,
+        "figsize": (3, 2),
+        "cbar": False,
+        "progress": False,
+        "output": tmp_path / f"{mode}.mp4",
+    }
     if mode == "temporal":
         result = movie(
             dd,
@@ -263,7 +263,7 @@ def test_movies_with_real_reader_and_overlay_or_stream(tmp_path, mode):
                 text=True,
             ).strip()
         )
-        assert frames == (3 if mode in ("temporal", "los") else 3)
+        assert frames == 3  # three snapshots, scan planes or LOS frames
 
 
 def test_movie_rejects_incompatible_modes(tmp_path):

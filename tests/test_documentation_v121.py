@@ -6,7 +6,6 @@ import ast
 import inspect
 from pathlib import Path
 
-import bifrost_proto
 from bifrost_proto.core import BifrostData
 from bifrost_proto.labels import latex_varname
 from bifrost_proto.registry import GLOBAL_REGISTRY
@@ -54,9 +53,9 @@ def test_python_functions_and_classes_are_documented():
     for path in sources:
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-                if ast.get_docstring(node) is None:
-                    missing.append(
-                        f"{path.relative_to(root)}:{node.lineno}:{node.name}"
-                    )
+            if (
+                isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+                and ast.get_docstring(node) is None
+            ):
+                missing.append(f"{path.relative_to(root)}:{node.lineno}:{node.name}")
     assert not missing, "Missing docstrings:\n" + "\n".join(missing)

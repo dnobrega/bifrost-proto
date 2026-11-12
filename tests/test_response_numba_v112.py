@@ -1,11 +1,8 @@
-import json
-from pathlib import Path
-
 import numpy as np
-
-from bifrost_proto.responses import InstrumentResponseTable
 from test_engine import make_data
 from test_responses_v19 import attach_composition, write_response
+
+from bifrost_proto.responses import InstrumentResponseTable
 
 
 def _make_response(tmp_path, *, fill_value=0.0):

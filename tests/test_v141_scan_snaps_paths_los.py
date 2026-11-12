@@ -11,10 +11,10 @@ matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from test_engine import make_data
 
 from bifrost_proto import BifrostData
 from bifrost_proto.movie import _scan_positions, movie
-from test_engine import make_data
 
 
 def _data(n=20):
@@ -115,10 +115,9 @@ def test_real_reader_spatial_movie_reads_one_plane_per_frame(tmp_path, axis):
         cbar=False,
     )
     assert target.is_file() and target.parent == tmp_path / "movies"
-    assert target.name.startswith(
-        f"r_0000_{dict(x='YZ', y='XZ', z='XY')[axis]}_scan-{axis}="
-    )
-    assert f"_every=0003.mp4" in target.name
+    plane = {"x": "YZ", "y": "XZ", "z": "XY"}[axis]
+    assert target.name.startswith(f"r_0000_{plane}_scan-{axis}=")
+    assert "_every=0003.mp4" in target.name
     assert len(calls) == len(wanted)  # No re-read of first plane.
     assert all(int(snap) == 0 for snap, _ in calls)
     for (_, kwargs), pos in zip(calls, wanted):

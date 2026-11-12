@@ -8,7 +8,6 @@ from pathlib import Path
 
 from common import readsav_response, sha256sum, write_response
 
-
 VALID_NAMES = {"aia94", "aia131", "aia171", "aia193", "aia211", "aia304", "aia335"}
 
 

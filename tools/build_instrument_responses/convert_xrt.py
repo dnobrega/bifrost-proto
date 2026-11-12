@@ -8,7 +8,6 @@ from pathlib import Path
 
 from common import readsav_response, sha256sum, write_response
 
-
 VALID_NAMES = {
     "xrt_almed",
     "xrt_almesh",

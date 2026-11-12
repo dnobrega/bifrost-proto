@@ -15,10 +15,10 @@ python benchmarks/benchmark_magnitude_memory.py numba --n 512 --order F --stride
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import resource
 import sys
 import time
+from pathlib import Path
 
 import numpy as np
 

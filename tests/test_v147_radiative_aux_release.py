@@ -7,14 +7,13 @@ from pathlib import Path
 import numpy as np
 import pytest
 from matplotlib.colors import LogNorm, SymLogNorm
+from test_io import write_mesh
 
 from bifrost_proto import BifrostData, UnknownVariableError
 from bifrost_proto.labels import latex_varname
 from bifrost_proto.plot_defaults import PLOT_PRESETS, get_plot_preset
 from bifrost_proto.registry import GLOBAL_REGISTRY
 from bifrost_proto.units import BifrostUnits
-from test_io import write_mesh
-
 
 NEW_RATES = ("qrad", "qgenrad")
 
@@ -102,7 +101,7 @@ def test_source_must_exist_in_aux_even_if_saved_cache_exists(sample_aux):
 
 
 def test_source_not_declared_raises_even_with_other_aux_fields(sample_aux):
-    dd, tmp_path = sample_aux
+    _dd, tmp_path = sample_aux
     # Changing IDL requires a fresh reader to re-read its AUX list.
     p = tmp_path / "radiation.idl"
     p.write_text(p.read_text().replace("aux='qrad qgenrad'", "aux='qrad'"))
@@ -159,7 +158,7 @@ def test_plot_new_radiative_source_uses_default_divergent_preset(sample_aux):
     import matplotlib.pyplot as plt
 
     dd, _ = sample_aux
-    fig, ax, im = dd.plot("qrad", 0, z=-3)
+    fig, _ax, im = dd.plot("qrad", 0, z=-3)
     try:
         assert im.cmap.name == "RdBu_r"
         assert isinstance(im.norm, SymLogNorm)

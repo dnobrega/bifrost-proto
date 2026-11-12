@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import json
-import warnings
 
 import numpy as np
 import pytest
-
-from bifrost_proto import BifrostData
-from bifrost_proto.eos import EOSTable, read_idl_ascii
 from test_api_io_v127 import _write_mesh
 from test_eos_numba_v114 import make_eos
+
+from bifrost_proto import BifrostData
+from bifrost_proto.eos import read_idl_ascii
 
 
 def _binary_run(tmp_path, n=96):

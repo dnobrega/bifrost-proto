@@ -1,8 +1,8 @@
 import numpy as np
+from test_engine import make_data
 
 import bifrost_proto.core as core_module
 from bifrost_proto.core import BifrostData
-from test_engine import make_data
 
 
 def _uniform_z_reference(value, axis_names, z):
